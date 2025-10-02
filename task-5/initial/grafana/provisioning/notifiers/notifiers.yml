@@ -1,0 +1,15 @@
+notifiers:
+  - name: webhook-alerts
+    type: webhook
+    uid: webhook-alerts
+    org_id: 1
+    is_default: false
+    settings:
+      url: "http://localhost:8080/api/alerts/webhook"
+      httpMethod: "POST"
+      username: ""
+      password: ""
+      disableResolveMessage: false
+      title: "Batch Processing Alert"
+      text: "{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}"
+      uploadImage: false

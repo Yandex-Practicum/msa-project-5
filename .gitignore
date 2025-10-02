@@ -1,0 +1,25 @@
+.idea
+
+task-1/project/logs
+task-1/project/data/processed
+
+task-3/results/postgres_data
+task-3/csv-exporter/target
+
+task-4/initial/build
+task-4/initial/.gradle
+
+task-5/initial/build
+task-5/initial/.gradle
+
+# Environment files with sensitive data
+.env
+env.local
+*.env
+
+*.jar
+
+*.gradle
+
+*build
+

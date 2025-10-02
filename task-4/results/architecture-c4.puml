@@ -1,0 +1,105 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title ETL System Architecture with Spring Batch
+
+' Context Diagram
+Person(admin, "System Administrator", "Manages and monitors ETL processes")
+Person(analyst, "Data Analyst", "Uses processed data for analysis")
+
+System(etl_system, "ETL Processing System", "Processes product and loyalty data using Spring Batch")
+
+System_Ext(csv_files, "CSV Files", "Source data files")
+System_Ext(postgres, "PostgreSQL Database", "Target database for processed data")
+
+Rel(admin, etl_system, "Manages and monitors", "HTTPS/SSH")
+Rel(analyst, postgres, "Queries processed data", "SQL")
+Rel(etl_system, csv_files, "Reads data from", "File I/O")
+Rel(etl_system, postgres, "Writes processed data to", "JDBC")
+
+@enduml
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title ETL System - Container Diagram
+
+Person(admin, "System Administrator", "Manages ETL processes")
+Person(analyst, "Data Analyst", "Analyzes processed data")
+
+System_Boundary(etl_system, "ETL Processing System") {
+    Container(spring_batch, "Spring Batch Application", "Java/Spring Boot", "Orchestrates ETL jobs and manages batch processing")
+    Container(web_ui, "Web Interface", "Spring Boot Web", "Provides monitoring and management interface")
+    Container(scheduler, "Job Scheduler", "Spring Scheduler", "Schedules and triggers batch jobs")
+}
+
+System_Ext(csv_files, "CSV Files", "product-data.csv, loyality_data.csv")
+System_Ext(postgres, "PostgreSQL Database", "Stores processed data")
+System_Ext(file_system, "File System", "Stores CSV files and logs")
+
+Rel(admin, web_ui, "Manages jobs", "HTTPS")
+Rel(admin, spring_batch, "Monitors execution", "JMX/Logs")
+Rel(analyst, postgres, "Queries data", "SQL")
+
+Rel(spring_batch, csv_files, "Reads CSV data", "File I/O")
+Rel(spring_batch, postgres, "Writes processed data", "JDBC")
+Rel(spring_batch, file_system, "Writes logs", "File I/O")
+Rel(scheduler, spring_batch, "Triggers jobs", "Spring Events")
+
+@enduml
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Spring Batch Application - Component Diagram
+
+Container_Boundary(spring_batch_app, "Spring Batch Application") {
+    Component(job_launcher, "Job Launcher", "Spring Batch", "Launches and manages batch jobs")
+    Component(job_repository, "Job Repository", "Spring Batch", "Stores job execution metadata")
+    
+    Component(import_job, "Import Product Job", "Spring Batch Job", "Main ETL job orchestrator")
+    
+    Component(step1, "Load Loyalty Data Step", "Spring Batch Step", "Loads loyalty data from CSV to database")
+    Component(step2, "Process Products Step", "Spring Batch Step", "Processes products with loyalty data updates")
+    
+    Component(loyalty_reader, "Loyalty Data Reader", "FlatFileItemReader", "Reads loyalty data from CSV")
+    Component(loyalty_writer, "Loyalty Data Writer", "JdbcBatchItemWriter", "Writes loyalty data to database")
+    
+    Component(product_reader, "Product Data Reader", "FlatFileItemReader", "Reads product data from CSV")
+    Component(product_processor, "Product Processor", "ItemProcessor", "Updates product data with loyalty information")
+    Component(product_writer, "Product Data Writer", "JdbcBatchItemWriter", "Writes processed products to database")
+    
+    Component(notification_listener, "Job Completion Listener", "JobExecutionListener", "Handles job completion events and logging")
+    
+    Component(transaction_manager, "Transaction Manager", "DataSourceTransactionManager", "Manages database transactions")
+    Component(data_source, "Data Source", "HikariCP", "Database connection pool")
+}
+
+System_Ext(csv_files, "CSV Files", "product-data.csv, loyality_data.csv")
+System_Ext(postgres, "PostgreSQL Database", "products, loyality_data tables")
+
+Rel(job_launcher, import_job, "Executes", "Spring Batch API")
+Rel(import_job, step1, "Starts with", "Spring Batch")
+Rel(import_job, step2, "Then executes", "Spring Batch")
+Rel(import_job, notification_listener, "Notifies on completion", "Spring Events")
+
+Rel(step1, loyalty_reader, "Uses", "Spring Batch")
+Rel(step1, loyalty_writer, "Uses", "Spring Batch")
+Rel(step2, product_reader, "Uses", "Spring Batch")
+Rel(step2, product_processor, "Uses", "Spring Batch")
+Rel(step2, product_writer, "Uses", "Spring Batch")
+
+Rel(loyalty_reader, csv_files, "Reads from", "File I/O")
+Rel(product_reader, csv_files, "Reads from", "File I/O")
+Rel(loyalty_writer, data_source, "Writes via", "JDBC")
+Rel(product_writer, data_source, "Writes via", "JDBC")
+Rel(product_processor, data_source, "Queries via", "JDBC")
+
+Rel(data_source, postgres, "Connects to", "JDBC")
+Rel(transaction_manager, data_source, "Manages", "Spring Transaction")
+
+Rel(job_repository, data_source, "Stores metadata via", "JDBC")
+
+@enduml

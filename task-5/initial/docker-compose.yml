@@ -4,13 +4,12 @@ services:
   postgresdb:
     image: postgres
     restart: unless-stopped
-    env_file: ./.env
     environment:
-      - POSTGRES_USER=$POSTGRESDB_USER
-      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
-      - POSTGRES_DB=$POSTGRESDB_DATABASE
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=productsdb
     ports:
-      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+      - 5432:5432
 
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
@@ -23,6 +22,7 @@ services:
     environment:
       - 'discovery.type=single-node'
       - 'xpack.security.enabled=false'
+      - 'xpack.ml.enabled=false'
       - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
     healthcheck:
       test: 'curl -f http://localhost:9200 || exit 1'
@@ -70,10 +70,22 @@ services:
     restart: 'unless-stopped'
     volumes:
       - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml'
     ports:
       - '9090:9090'
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "9090" ]
+
+  alertmanager:
+    image: 'prom/alertmanager:v0.27.0'
+    container_name: 'alertmanager'
+    restart: 'unless-stopped'
+    volumes:
+      - './prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml'
+    ports:
+      - '9093:9093'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9093" ]
 
   grafana:
     image: 'grafana/grafana:12.0.1'
@@ -90,13 +102,45 @@ services:
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "3000" ]
 
+  jaeger:
+    image: 'jaegertracing/all-in-one:latest'
+    container_name: 'jaeger'
+    restart: 'unless-stopped'
+    ports:
+      - '16686:16686'
+      - '14268:14268'
+      - '4317:4317'
+      - '4318:4318'
+      - '9411:9411'
+    environment:
+      - 'COLLECTOR_OTLP_ENABLED=true'
+      - 'COLLECTOR_ZIPKIN_HOST_PORT=:9411'
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:14269" ]
+
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
+      - jaeger
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+
+  batch-client:
+    depends_on:
+      - app
+    image: batch-client
+    build:
+      context: ./batch-client
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    environment:
+      - BATCH_API_URL=http://app:8080

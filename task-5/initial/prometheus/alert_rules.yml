@@ -1,0 +1,46 @@
+groups:
+  - name: batch_processing_alerts
+    rules:
+      - alert: BatchJobFailed
+        expr: batch_job_failed_total{job="batch-processing"} > 0
+        for: 0m
+        labels:
+          severity: critical
+          service: batch-processing
+        annotations:
+          summary: "Batch job failed"
+          description: "Batch processing job has failed. Failed jobs count: {{ $value }}"
+          runbook_url: "https://docs.example.com/runbooks/batch-job-failure"
+
+      - alert: HighProcessingDuration
+        expr: batch_product_processing_duration_seconds{job="batch-processing"} > 1
+        for: 1m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "High product processing duration"
+          description: "Product processing is taking longer than expected. Duration: {{ $value }}s"
+          runbook_url: "https://docs.example.com/runbooks/slow-processing"
+
+      - alert: NoProductsProcessed
+        expr: increase(batch_products_processed_total{job="batch-processing"}[5m]) == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "No products processed in last 5 minutes"
+          description: "No products have been processed in the last 5 minutes. This might indicate a problem with the batch processing system."
+          runbook_url: "https://docs.example.com/runbooks/no-processing"
+
+      - alert: LowLoyaltyUpdateRate
+        expr: (batch_products_loyalty_updated_total{job="batch-processing"} / batch_products_processed_total{job="batch-processing"}) < 0.5
+        for: 2m
+        labels:
+          severity: info
+          service: batch-processing
+        annotations:
+          summary: "Low loyalty update rate"
+          description: "Only {{ $value | humanizePercentage }} of products are having their loyalty data updated. This might indicate data quality issues."
+          runbook_url: "https://docs.example.com/runbooks/low-loyalty-updates"

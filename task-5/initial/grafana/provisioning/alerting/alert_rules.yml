@@ -1,0 +1,181 @@
+apiVersion: 1
+
+groups:
+  - name: batch_processing_alerts
+    orgId: 1
+    folder: "Batch Processing"
+    interval: 10s
+    rules:
+      - uid: batch_job_failed_alert
+        title: "Batch Job Failed"
+        condition: "C"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+              type: "prometheus"
+              uid: "prometheus"
+            model:
+              expr: "batch_job_failed_total{job=\"batch-processing\"}"
+              interval: ""
+              legendFormat: ""
+              refId: "A"
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+              type: "__expr__"
+              uid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A", "B"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "threshold"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              refId: "B"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "0s"
+        annotations:
+          summary: "Batch job has failed"
+          description: "The batch processing job has failed. Please check the logs for more details."
+        labels:
+          severity: "critical"
+          service: "batch-processing"
+
+      - uid: high_processing_duration_alert
+        title: "High Processing Duration"
+        condition: "C"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+              type: "prometheus"
+              uid: "prometheus"
+            model:
+              expr: "batch_product_processing_duration_seconds{job=\"batch-processing\"}"
+              interval: ""
+              legendFormat: ""
+              refId: "A"
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+                type: "__expr__"
+                uid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A", "B"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "threshold"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              refId: "B"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "1m"
+        annotations:
+          summary: "High product processing duration"
+          description: "Product processing is taking longer than expected ({{ $value }}s). This might indicate performance issues."
+        labels:
+          severity: "warning"
+          service: "batch-processing"
+
+      - uid: no_products_processed_alert
+        title: "No Products Processed"
+        condition: "C"
+        data:
+          - refId: "A"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+              type: "prometheus"
+              uid: "prometheus"
+            model:
+              expr: "increase(batch_products_processed_total{job=\"batch-processing\"}[5m])"
+              interval: ""
+              legendFormat: ""
+              refId: "A"
+          - refId: "B"
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasource:
+                type: "__expr__"
+                uid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: "eq"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["A", "B"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "threshold"
+              datasource:
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: "last"
+              refId: "B"
+              type: "reduce"
+        noDataState: "NoData"
+        execErrState: "Alerting"
+        for: "2m"
+        annotations:
+          summary: "No products processed recently"
+          description: "No products have been processed in the last 5 minutes. This might indicate a problem with the batch processing system."
+        labels:
+          severity: "warning"
+          service: "batch-processing"

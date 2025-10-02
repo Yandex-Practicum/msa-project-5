@@ -1,0 +1,33 @@
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@example.com'
+
+route:
+  group_by: ['alertname', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'webhook'
+  routes:
+  - match:
+      severity: critical
+    receiver: 'webhook-critical'
+  - match:
+      severity: warning
+    receiver: 'webhook-warning'
+
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://app:8080/api/alerts/webhook'
+    send_resolved: true
+
+- name: 'webhook-critical'
+  webhook_configs:
+  - url: 'http://app:8080/api/alerts/webhook'
+    send_resolved: true
+
+- name: 'webhook-warning'
+  webhook_configs:
+  - url: 'http://app:8080/api/alerts/webhook'
+    send_resolved: true

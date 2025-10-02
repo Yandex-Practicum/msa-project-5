@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title B2B Price Exporter — C4 Context Diagram
+
+Person(b2b, "B2B Клиент", "Получает ежедневный CSV/XLS прайс-лист")
+
+System_Boundary(shop, "Онлайн-магазин (облако, микросервисы)") {
+  System(pricing, "B2B Price Exporter (K8s CronJob)", "Ежедневно в 06:00 выполняет SQL COPY и загружает CSV в объектное хранилище")
+}
+
+System_Ext(pg, "PostgreSQL", "Хранит данные о продуктах, категориях, клиентах, ценах")
+System_Ext(storage, "Объектное хранилище", "Файловое хранилище, прайсы CSV/XLS")
+System_Ext(k8s, "Kubernetes API", "Планирование CronJob, запуск Pod")
+System_Ext(secrets, "Secrets Manager", "Пароли доступа к БД, хранилищам")
+System_Ext(monitor, "Мониторинг и алертинг", "Метрики, уведомления о статусе джобы")
+System_Ext(logging, "Централизованный логинг", "ELK. Логи по приложениям")
+
+Rel(b2b, storage, "Скачивает прайс-листы", "HTTPS")
+Rel(k8s, pricing, "Запускает по CRON (06:00)", "K8s CronJob")
+Rel(pricing, pg, "Читает данные (SELECT + COPY)", "5432/TLS")
+Rel(pricing, storage, "Загружает CSV", "HTTPS / S3 API")
+Rel(pricing, secrets, "Читает секреты", "подмонтированные env/volume")
+Rel(pricing, monitor, "Публикует метрики/события")
+Rel(pricing, logging, "Пишет логи")
+
+@enduml

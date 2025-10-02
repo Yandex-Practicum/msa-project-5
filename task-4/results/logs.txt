@@ -1,0 +1,134 @@
+
+  .   ____          _            __ _ _
+
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+
+ =========|_|==============|___/=/_/_/_/
+
+
+ :: Spring Boot ::                (v3.5.3)
+
+
+2025-09-27T14:29:01.150Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v0.0.1-SNAPSHOT using Java 17.0.2 with PID 1 (/app/app.jar started by root in /app)
+
+2025-09-27T14:29:01.155Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : The following 1 profile is active: "docker"
+
+2025-09-27T14:29:01.495Z  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+
+2025-09-27T14:29:01.513Z  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 9 ms. Found 0 JPA repository interfaces.
+
+2025-09-27T14:29:01.701Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+
+2025-09-27T14:29:01.827Z  INFO 1 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@38a1a26
+
+2025-09-27T14:29:01.829Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+
+2025-09-27T14:29:01.936Z  INFO 1 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+
+2025-09-27T14:29:01.980Z  INFO 1 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.18.Final
+
+2025-09-27T14:29:02.011Z  INFO 1 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+
+2025-09-27T14:29:02.253Z  INFO 1 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+
+2025-09-27T14:29:02.299Z  WARN 1 --- [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+
+2025-09-27T14:29:02.311Z  INFO 1 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+
+Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+
+Database driver: undefined/unknown
+
+Database version: 17.4
+
+Autocommit mode: undefined/unknown
+
+Isolation level: undefined/unknown
+
+Minimum pool size: undefined/unknown
+
+Maximum pool size: undefined/unknown
+
+2025-09-27T14:29:02.509Z  INFO 1 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+
+2025-09-27T14:29:02.513Z  INFO 1 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+
+2025-09-27T14:29:02.700Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Started BatchProcessingApplication in 1.806 seconds (process running for 2.805)
+
+2025-09-27T14:29:02.703Z  INFO 1 --- [           main] o.s.b.a.b.JobLauncherApplicationRunner   : Running default command line with: []
+
+2025-09-27T14:29:02.727Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] launched with the following parameters: [{}]
+
+2025-09-27T14:29:02.741Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [step2]
+
+2025-09-27T14:29:02.762Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [step2] executed in 20ms
+
+2025-09-27T14:29:02.768Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [step1]
+
+2025-09-27T14:29:02.774Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processing product: Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]
+
+2025-09-27T14:29:02.779Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Updated loyalty data for product 20001: Loyality_off -> Loyality_on
+
+2025-09-27T14:29:02.779Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processed product: Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off] -> Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_on]
+
+2025-09-27T14:29:02.780Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processing product: Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]
+
+2025-09-27T14:29:02.781Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Updated loyalty data for product 30001: Loyality_off -> Loyality_on
+
+2025-09-27T14:29:02.781Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processed product: Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off] -> Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_on]
+
+2025-09-27T14:29:02.781Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processing product: Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]
+
+2025-09-27T14:29:02.782Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : No loyalty data found for product 40001, keeping original data: Loyality_on
+
+2025-09-27T14:29:02.782Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processed product: Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on] -> Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]
+
+2025-09-27T14:29:02.782Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processing product: Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]
+
+2025-09-27T14:29:02.783Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Updated loyalty data for product 50001: Loyality_off -> Loyality_on
+
+2025-09-27T14:29:02.783Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processed product: Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off] -> Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_on]
+
+2025-09-27T14:29:02.783Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processing product: Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]
+
+2025-09-27T14:29:02.784Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Updated loyalty data for product 60001: Loyality_on -> Loyality_on
+
+2025-09-27T14:29:02.784Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Processed product: Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on] -> Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]
+
+2025-09-27T14:29:02.788Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [step1] executed in 19ms
+
+2025-09-27T14:29:02.792Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Job completed successfully! Showing results:
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Total products processed: 5
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Products in database:
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Product ID: 1, SKU: 20001, Name: hammer, Amount: 45, Data: Loyality_on
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Product ID: 2, SKU: 30001, Name: sink, Amount: 20, Data: Loyality_on
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Product ID: 3, SKU: 40001, Name: roof_shell, Amount: 256, Data: Loyality_on
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Product ID: 4, SKU: 50001, Name: priming, Amount: 67, Data: Loyality_on
+
+2025-09-27T14:29:02.794Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Product ID: 5, SKU: 60001, Name: clapboard, Amount: 120, Data: Loyality_on
+
+2025-09-27T14:29:02.796Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Loyalty statistics:
+
+2025-09-27T14:29:02.797Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  :   Products with loyalty ON: 5
+
+2025-09-27T14:29:02.797Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  :   Products with loyalty OFF: 0
+
+2025-09-27T14:29:02.800Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] completed with the following parameters: [{}] and the following status: [COMPLETED] in 58ms
+
+2025-09-27T14:29:02.804Z  INFO 1 --- [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+
+2025-09-27T14:29:02.806Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+
+2025-09-27T14:29:02.812Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

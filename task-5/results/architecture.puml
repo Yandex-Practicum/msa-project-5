@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title ETL System Architecture with Monitoring, Logging and Alerting
+
+' Context Diagram
+Person(admin, "System Administrator", "Manages and monitors ETL processes")
+Person(analyst, "Data Analyst", "Uses processed data for analysis")
+Person(ops, "Operations Team", "Monitors system health and responds to alerts")
+
+System(etl_system, "ETL Processing System", "Processes product and loyalty data using Spring Batch with comprehensive monitoring")
+System(monitoring, "Monitoring & Observability Stack", "Prometheus, Grafana, ELK Stack for metrics, logs and alerting")
+
+System_Ext(csv_files, "CSV Files", "Source data files")
+System_Ext(postgres, "PostgreSQL Database", "Target database for processed data")
+System_Ext(notifications, "Notification Systems", "Slack, Email, SMS for alert delivery")
+
+Rel(admin, etl_system, "Manages and monitors", "HTTPS/SSH")
+Rel(admin, monitoring, "Configures and views", "HTTPS")
+Rel(analyst, postgres, "Queries processed data", "SQL")
+Rel(ops, monitoring, "Responds to alerts", "HTTPS/Notifications")
+Rel(etl_system, csv_files, "Reads data from", "File I/O")
+Rel(etl_system, postgres, "Writes processed data to", "JDBC")
+Rel(etl_system, monitoring, "Sends metrics and logs", "HTTP/Logs")
+Rel(monitoring, notifications, "Sends alerts", "Webhooks/API")
+
+@enduml
+

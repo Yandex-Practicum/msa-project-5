@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: csv-exporter-cronjob
+  namespace: shipment-db
+spec:
+  # Run every day at 2:00 AM
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: csv-exporter
+            image: csv-exporter:latest
+            imagePullPolicy: Never  # Use local image for development
+            envFrom:
+            - configMapRef:
+                name: csv-exporter-config
+            - secretRef:
+                name: csv-exporter-secret
+            volumeMounts:
+            - name: exports-storage
+              mountPath: /app/exports
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "250m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          volumes:
+          - name: exports-storage
+            persistentVolumeClaim:
+              claimName: csv-exports-pvc

@@ -4,13 +4,15 @@ services:
   postgresdb:
     image: postgres
     restart: unless-stopped
-    env_file: ./.env
+    env_file: ./env.local
     environment:
       - POSTGRES_USER=$POSTGRESDB_USER
       - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
   app:
     depends_on:
@@ -19,4 +21,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: "no"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
