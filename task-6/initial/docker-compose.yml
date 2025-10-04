@@ -1,0 +1,144 @@
+version: "3.8"
+
+services:
+  postgresdb:
+    image: postgres
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=$POSTGRESDB_USER
+      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
+      - POSTGRES_DB=$POSTGRESDB_DATABASE
+    ports:
+      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/schema-all.sql:ro
+
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
+    platform: linux/amd64
+    container_name: 'elasticsearch'
+    restart: 'unless-stopped'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    environment:
+      - 'discovery.type=single-node'
+      - 'xpack.security.enabled=false'
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    healthcheck:
+      test: 'curl -f http://localhost:9200 || exit 1'
+
+  logstash:
+    image: 'docker.elastic.co/logstash/logstash:7.17.28'
+    container_name: 'logstash'
+    restart: 'unless-stopped'
+    ports:
+      - '5044:5044'
+    volumes:
+      - './logstash/pipeline:/usr/share/logstash/pipeline/'
+      - './logstash/templates:/usr/share/logstash/templates/'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:9600 || exit 1'
+
+  kibana:
+    image: 'docker.elastic.co/kibana/kibana:7.17.28'
+    container_name: 'kibana'
+    restart: 'unless-stopped'
+    ports:
+      - '5601:5601'
+    environment:
+      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:5601 || exit 1'
+
+  filebeat:
+    build: 'filebeat'
+    container_name: 'filebeat'
+    restart: 'unless-stopped'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
+      - './filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro'
+      - './logs:/app/logs:ro'
+    depends_on:
+      - 'elasticsearch'
+      - 'logstash'
+
+  prometheus:
+    image: 'prom/prometheus:v3.4.0'
+    container_name: 'prometheus'
+    restart: 'unless-stopped'
+    volumes:
+      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - ./prometheus/alerting_rules.yml:/etc/prometheus/alerting_rules.yml
+      - ./prometheus/alertmanager.yml:/etc/prometheus/alertmanager.yml
+    ports:
+      - '9090:9090'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9090" ]
+  
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - '9093:9093'
+
+  grafana:
+    image: 'grafana/grafana:12.0.1'
+    container_name: 'grafana'
+    restart: 'unless-stopped'
+    ports:
+      - '3000:3000'
+    environment:
+      - 'GF_USERS_ALLOW_SIGN_UP=false'
+    volumes:
+      - './grafana/provisioning:/etc/grafana/provisioning'
+    depends_on:
+      - 'prometheus'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "3000" ]
+
+  app:
+    depends_on:
+      - postgresdb
+      - filebeat
+      - grafana
+      - jaeger
+    image: batch-processing
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: no
+    ports:
+      - '8080:8080'
+    volumes:
+      - './logs:/app/logs'
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:MaxMetaspaceSize=256m
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.58
+    container_name: jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "9411:9411"
+      - "4317:4317"
+      - "4318:4318"
+      - "6831:6831/udp"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:16686"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

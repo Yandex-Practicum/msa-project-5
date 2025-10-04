@@ -1,0 +1,33 @@
+groups:
+- name: batch-processing-alerts
+  rules:
+  - alert: HighJobDuration
+    expr: histogram_quantile(0.95, sum(rate(batch_job_duration_seconds_bucket{job_name="importProductJob", status="COMPLETED"}[5m])) by (le)) > 30
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High job duration detected for importProductJob"
+      description: "95th percentile of job duration for importProductJob is {{ $value }} seconds, exceeding SLA of 30 seconds."
+      job_name: "{{ $labels.job_name }}"
+      status: "{{ $labels.status }}"
+
+  - alert: HighLoyaltyUpdateFailures
+    expr: increase(loyalty_updates_failed_total{job="batch-processing"}[1h]) > 5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High number of loyalty update failures"
+      description: "{{ $value }} loyalty update failures detected in the last hour, exceeding threshold of 5."
+      job: "{{ $labels.job }}"
+
+  - alert: HighJVMHeapUsage
+    expr: clamp_max(jvm_memory_used_bytes{area="heap", id="G1 Old Gen", job="batch-processing"} / jvm_memory_max_bytes{area="heap", id="G1 Old Gen", job="batch-processing"} * 100, 100) > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High JVM heap usage detected"
+      description: "JVM heap usage is {{ $value }}%, exceeding threshold of 90%."
+      job: "{{ $labels.job }}"
