@@ -21,34 +21,56 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 @Configuration
 public class BatchConfiguration {
 
-	@Bean
-	public FlatFileItemReader<Product> reader() {
-		return new FlatFileItemReaderBuilder<Product>()
-			//todo
-			.targetType(Product.class)
+    @Autowired
+    private ProductItemProcessor productItemProcessor;
+
+    @Bean
+    public FlatFileItemReader<Product> reader() {
+        return new FlatFileItemReaderBuilder<Product>()
+            .name("productItemReader")
+            .resource(new ClassPathResource("product-data.csv"))
+            .delimited()
+            .names(new String[]{"productId", "productSku", "productName", "productAmount", "productData"})
+            .targetType(Product.class)
+            .build();
+    }
+
+    @Bean
+    public ProductItemProcessor processor() {
+        return productItemProcessor;
+    }
+
+    @Bean
+	public JdbcBatchItemWriter<Product> writer(DataSource dataSource) {
+		return new JdbcBatchItemWriterBuilder<Product>()
+			.dataSource(dataSource)
+			.sql("INSERT INTO products (productId, productSku, productName, productAmount, productData) " +
+				"VALUES (:productId, :productSku, :productName, :productAmount, :productData) " +
+				"ON CONFLICT (productId) DO UPDATE SET " +
+				"productSku = EXCLUDED.productSku, " +
+				"productName = EXCLUDED.productName, " +
+				"productAmount = EXCLUDED.productAmount, " +
+				"productData = EXCLUDED.productData")
+			.beanMapped()
 			.build();
 	}
 
-	@Bean
-	public ProductItemProcessor processor() {
-		return new ProductItemProcessor();
-	}
+    @Bean
+    public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
+        return new JobBuilder("importProductJob", jobRepository)
+            .listener(listener)
+            .start(step1)
+            .build();
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Product> writer(DataSource dataSource) {
-		return //todo
-
-	}
-
-	@Bean
-	public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
-		return //todo
-	}
-
-	@Bean
-	public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
-					  FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> writer) {
-		return //todo
-	}
-
+    @Bean
+    public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
+                      FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> writer) {
+        return new StepBuilder("step1", jobRepository)
+            .<Product, Product>chunk(100, transactionManager)
+            .reader(reader)
+            .processor(processor)
+            .writer(writer)
+            .build();
+    }
 }

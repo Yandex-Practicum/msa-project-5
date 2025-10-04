@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-export-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: export-container
+        image: export-job:latest
+        env:
+        - name: DB_HOST
+          value: "your-db-host"
+        - name: DB_NAME
+          value: "testdb"
+        - name: DB_USER
+          value: "dbuser"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+      restartPolicy: OnFailure

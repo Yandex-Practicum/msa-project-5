@@ -1,0 +1,16 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /app/logs/*.log
+  fields:
+    service_name: "batch-processing"
+    environment: "docker"
+
+output.logstash:
+  hosts: ["logstash:5044"]
+  ssl.enabled: false
+
+setup.ilm.enabled: false
+
+logging.level: info

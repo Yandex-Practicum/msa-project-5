@@ -1,0 +1,29 @@
+@startuml
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Сотрудник", "Взаимодействует с системой через webui")
+
+System_Boundary(sys, "System Boundary", "App") {
+  Container(frontend, "Frontend Container", "WebUI", "Веб-приложение для взаимодействия с пользователем")
+  Container(backend, "Backend (monolith)", "Java App", "Обработка запросов и бизнес-логика")
+  Container(batch, "Batch Component", "Spring Batch ETL", "Обработка данных и выполнение ETL задач")
+  ContainerDb(database, "Database Container", "PostgreSQL", "Хранит данные")
+  Container(storage, "Storage Container", "GCS Bucket", "Хранилище для csv файлов")
+  Container(monitoring, "Monitoring Container", "Prometheus", "Сбор метрик приложения")
+  Container(visualization, "Visualization Container", "Grafana", "Визуализация метрик и оповещения")
+  Container(logging, "Logging Container", "ELK Stack", "Централизованное логирование")
+}
+
+Rel(user, frontend, "REST", "Взаимодействие с приложением")
+Rel(frontend, backend, "REST", "Запросы к серверу")
+Rel(backend, batch, "Запуск Job", "Инициирует ETL задачи")
+Rel(batch, database, "Чтение/Запись", "Работа с данными")
+Rel(batch, storage, "Хранение csv", "Сохранение файлов")
+Rel(backend, monitoring, "Метрики", "Отправка метрик через Actuator")
+Rel(monitoring, visualization, "Данные", "Передача метрик для визуализации")
+Rel(visualization, user, "Оповещения", "Уведомления о критических событиях")
+Rel(batch, logging, "Логи", "Отправка логов через Filebeat")
+Rel(logging, user, "Визуализация логов", "Отображение логов в Kibana")
+
+@enduml
