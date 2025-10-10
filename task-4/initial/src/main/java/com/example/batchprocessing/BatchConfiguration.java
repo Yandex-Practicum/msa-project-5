@@ -7,48 +7,70 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.FieldSet;
+import org.springframework.boot.context.properties.bind.BindException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 @Configuration
 public class BatchConfiguration {
+    @Bean
+    public FlatFileItemReader<Product> reader() {
+        return new FlatFileItemReaderBuilder<Product>()
+            .name("productReader")
+            .resource(new ClassPathResource("product-data.csv"))
+            .delimited()
+            .names("productId", "productSku", "productName", "productAmount", "productData")
+            .fieldSetMapper(fieldSet -> new Product(
+                fieldSet.readLong("productId"),
+                fieldSet.readLong("productSku"),
+                fieldSet.readString("productName"),
+                fieldSet.readLong("productAmount"),
+                fieldSet.readString("productData")
+            ))
+            .build();
+    }
 
-	@Bean
-	public FlatFileItemReader<Product> reader() {
-		return new FlatFileItemReaderBuilder<Product>()
-			//todo
-			.targetType(Product.class)
-			.build();
-	}
+    @Bean
+    public ProductItemProcessor processor() {
+        return new ProductItemProcessor();
+    }
 
-	@Bean
-	public ProductItemProcessor processor() {
-		return new ProductItemProcessor();
-	}
+    @Bean
+    public JdbcBatchItemWriter<Product> writer(DataSource dataSource) {
+        return new JdbcBatchItemWriterBuilder<Product>()
+            .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
+            .sql("INSERT INTO products (productId, productSku, productName, productAmount, productData) "
+                 + "VALUES (:productId, :productSku, :productName, :productAmount, :productData)")
+            .dataSource(dataSource)
+            .build();
+    }
 
-	@Bean
-	public JdbcBatchItemWriter<Product> writer(DataSource dataSource) {
-		return //todo
+    @Bean
+    public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
+        return new JobBuilder("productJob", jobRepository)
+            .listener(listener)
+            .start(step1)
+            .build();
+    }
 
-	}
-
-	@Bean
-	public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
-		return //todo
-	}
-
-	@Bean
-	public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
-					  FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> writer) {
-		return //todo
-	}
-
+    @Bean
+    public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
+                      FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> writer) {
+        return new StepBuilder("step1", jobRepository)
+            .<Product, Product>chunk(3, transactionManager)
+            .reader(reader)
+            .processor(processor)
+            .writer(writer)
+            .build();
+    }
 }

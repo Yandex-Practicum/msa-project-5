@@ -1,0 +1,18 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(cli, "Клиент", "Получает csv прайс-листы каждое утро")
+System_Boundary(k8s_system, "Kubernetes Cluster") {
+    System(cronjob, "K8s CronJob", "Docker контейнер с Python-скриптом, который генерирует прайс-листы")
+}
+
+System(postgres, "PostgreSQL DB", "Хранит products, categories, clients, client_prices")
+System(storage, "Object Storage (S3/GCS)", "Хранит сгенерированные csv файлы")
+System(notification, "Email", "Отправка уведомлений о готовности прайс-листа")
+System(web, "WebUI", "Отображение данных в UI")
+Rel(cli, web, "Получает данные")
+Rel(web, storage, "Подгружает csv")
+Rel(cronjob, postgres, "Читает данные (SQL)")
+Rel(cronjob, storage, "Записывает csv")
+Rel(cronjob, notification, "Отправляет уведомления")
+@enduml
