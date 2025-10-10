@@ -1,0 +1,28 @@
+2025-10-07 12:26:49
+2025-10-07 12:26:49   .   ____          _            __ _ _
+2025-10-07 12:26:49  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+2025-10-07 12:26:49 ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+2025-10-07 12:26:49  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+2025-10-07 12:26:49   '  |____| .__|_| |_|_| |_\__, | / / / /
+2025-10-07 12:26:49  =========|_|==============|___/=/_/_/_/
+2025-10-07 12:26:49
+2025-10-07 12:26:49  :: Spring Boot ::                (v3.5.3)
+2025-10-07 12:26:49
+2025-10-07 12:26:49 2025-10-07T09:26:49.109Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v0.0.1-SNAPSHOT using Java 24 with PID 1 (/app.jar started by root in /)
+2025-10-07 12:26:49 2025-10-07T09:26:49.110Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : No active profile set, falling back to 1 default profile: "default"
+2025-10-07 12:26:49 2025-10-07T09:26:49.544Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-10-07 12:26:49 2025-10-07T09:26:49.703Z  INFO 1 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@203c20cf
+2025-10-07 12:26:49 2025-10-07T09:26:49.703Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-10-07 12:26:50 2025-10-07T09:26:50.869Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Started BatchProcessingApplication in 2.047 seconds (process running for 2.559)
+2025-10-07 12:26:50 2025-10-07T09:26:50.878Z  INFO 1 --- [           main] o.s.b.a.b.JobLauncherApplicationRunner   : Running default command line with: []
+2025-10-07 12:26:51 2025-10-07T09:26:51.058Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=productJob]] launched with the following parameters: [{}]
+2025-10-07 12:26:51 2025-10-07T09:26:51.084Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Step already complete or not restartable, so no action to execute: StepExecution: id=7, version=4, name=step1, status=COMPLETED, exitStatus=COMPLETED, readCount=5, filterCount=0, writeCount=5 readSkipCount=0, writeSkipCount=0, processSkipCount=0, commitCount=2, rollbackCount=0, exitDescription=
+2025-10-07 12:26:51 2025-10-07T09:26:51.087Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Job finished
+2025-10-07 12:26:51 2025-10-07T09:26:51.103Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Updated table: Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]
+2025-10-07 12:26:51 Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]
+2025-10-07 12:26:51 Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]
+2025-10-07 12:26:51 Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]
+2025-10-07 12:26:51 Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]
+2025-10-07 12:26:51 2025-10-07T09:26:51.107Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=productJob]] completed with the following parameters: [{}] and the following status: [COMPLETED] in 18ms
+2025-10-07 12:26:51 2025-10-07T09:26:51.117Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-10-07 12:26:51 2025-10-07T09:26:51.181Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

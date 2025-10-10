@@ -1,0 +1,26 @@
+@startuml C2_1
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+ContainerDb(doc_db, "БД Номенклатуры","PostgreSQL")
+ContainerDb(gcs, "Файловое Хранилище","GCS")
+ContainerDb(stock_db, "БД справочных данных о товарах","PostgreSQL")
+
+
+Person(user, "Сотрудник", "Взаимодействует через веб-интерфейс")
+
+Container(main_app, "Монолитное Приложение", "Java/Spring")
+Container(observability, "Мониторинг", "ELK/Prometheus/Grafana", "Сбор данных о сервисах")
+Container(batch_app, "Batch Component", "Spring Batch ETL", "Обработка данных и выполнение ETL задач")
+
+
+Rel(user, main_app, "Обращение к приложению", "REST")
+Rel(main_app, batch_app, "Запуск Job", "REST")
+Rel(main_app, stock_db, "Получение данных", "REST")
+Rel(batch_app, stock_db, "Обновление данных")
+Rel(batch_app, gcs, "Вычитка CSV")
+Rel(main_app, gcs, "Хранение CSV")
+Rel(observability, main_app, "Сбор логов и метрик")
+Rel(observability, batch_app, "Сбор логов и метрик")
+Rel(main_app, doc_db, "Хранение вычитка данных")
+
+@enduml
