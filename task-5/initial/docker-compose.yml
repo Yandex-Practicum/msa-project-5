@@ -90,12 +90,21 @@ services:
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "3000" ]
 
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - '9093:9093'
+
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
     image: batch-processing
+    ports:
+      - '8080:8080'
     build:
       context: .
       dockerfile: ./Dockerfile
