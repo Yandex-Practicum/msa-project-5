@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: csv-export-cronjob
+  labels:
+    app: csv-exporter
+    version: v1
+spec:
+  schedule: "0 6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app: csv-exporter
+        job-type: csv-export
+    spec:
+      template:
+        metadata:
+          labels:
+            app: csv-exporter
+            job-type: csv-export
+        spec:
+          containers:
+            - name: csv-exporter
+              image: importerkt:latest
+              imagePullPolicy: Never
+
+              volumeMounts:
+                - name: data-volume
+                  mountPath: /data
+                  subPath: exports
+
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "200m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+
+          restartPolicy: OnFailure
+
+          volumes:
+            - name: data-volume
+              persistentVolumeClaim:
+                claimName: cronjob-pvc
