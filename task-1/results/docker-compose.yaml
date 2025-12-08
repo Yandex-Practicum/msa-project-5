@@ -1,0 +1,61 @@
+services:
+  demo-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: demo_password
+      POSTGRES_DB: demo_db
+    volumes:
+      - ./data/fill_db_data.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_user -d demo_db"]
+      interval: 5s
+      retries: 3
+
+  mailbox:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  airflow:
+    image: apache/airflow:latest
+    container_name: airflow_engine
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow_demo:airflow_demo@airflow-db/airflow_demo
+      - AIRFLOW_CONN_DEMO_DB=postgresql+psycopg2://demo_user:demo_password@demo-db:5432/demo_db
+      
+      - AIRFLOW__SMTP__SMTP_HOST=mailbox
+      - AIRFLOW__SMTP__SMTP_PORT=1025
+      - AIRFLOW__SMTP__SMTP_MAIL_FROM=airflow@practicum-msa-sprint.com
+      - AIRFLOW__SMTP__SMTP_STARTTLS=False
+      - AIRFLOW__SMTP__SMTP_SSL=False
+
+      - _PIP_ADDITIONAL_REQUIREMENTS=pandas apache-airflow-providers-postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+    ports:
+      - "8080:8080"
+    command: standalone
+    depends_on:
+      demo-db:
+        condition: service_healthy
+      airflow-db:
+        condition: service_healthy
+  
+  airflow-db:
+    image: postgres:17
+    container_name: airflow_db
+    environment:
+      POSTGRES_USER: airflow_demo
+      POSTGRES_PASSWORD: airflow_demo
+      POSTGRES_DB: airflow_demo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow_demo"]
+      interval: 5s
+      retries: 3
