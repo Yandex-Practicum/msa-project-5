@@ -1,0 +1,83 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 YaBrowser/25.10.0.0 Safari/537.36" version="29.2.6">
+  <diagram name="Page-1" id="5B5YSUj92V8wTZMMKeEO">
+    <mxGraphModel dx="2067" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="xlXWCfdslynS_2L-pBuL-4" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="270" width="730" x="-30" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-1" parent="xlXWCfdslynS_2L-pBuL-4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=1 1;" value="" vertex="1">
+          <mxGeometry height="400" width="730" y="-130" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-2" parent="xlXWCfdslynS_2L-pBuL-4" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="Price-list db&lt;div&gt;[Container: PostgreSQL]&lt;/div&gt;&lt;div&gt;Contains accurate product&lt;/div&gt;&lt;div&gt;prices&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="190" x="30" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-9" parent="xlXWCfdslynS_2L-pBuL-4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1ba1e2;dashed=1;dashPattern=1 1;fontColor=#ffffff;strokeColor=#006EAF;" value="[Container: SMTP Server]" vertex="1">
+          <mxGeometry height="80" width="160" x="560" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-14" connectable="0" parent="xlXWCfdslynS_2L-pBuL-4" style="group;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="" vertex="1">
+          <mxGeometry height="170" width="260" x="260" y="-80" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-5" parent="xlXWCfdslynS_2L-pBuL-14" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=1 1;" value="&lt;div&gt;[Container: Apache Airflow]&lt;/div&gt;Extracts data&lt;div&gt;and outputscsv/xls&lt;/div&gt;" vertex="1">
+          <mxGeometry height="170" width="260" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-6" parent="xlXWCfdslynS_2L-pBuL-14" style="rounded=0;whiteSpace=wrap;html=1;" value="DAG" vertex="1">
+          <mxGeometry height="40" width="80" x="15" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-13" edge="1" parent="xlXWCfdslynS_2L-pBuL-14" source="xlXWCfdslynS_2L-pBuL-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="xlXWCfdslynS_2L-pBuL-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-15" connectable="0" parent="xlXWCfdslynS_2L-pBuL-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="triggers" vertex="1">
+          <mxGeometry relative="1" x="-0.0824" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-12" parent="xlXWCfdslynS_2L-pBuL-14" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#008a00;fontColor=#ffffff;strokeColor=#005700;" value="Cron&lt;div&gt;Scheduler&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="70" x="180" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-3" parent="xlXWCfdslynS_2L-pBuL-4" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="K8s" vertex="1">
+          <mxGeometry height="30" width="60" y="-130" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-16" edge="1" parent="xlXWCfdslynS_2L-pBuL-4" source="xlXWCfdslynS_2L-pBuL-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="xlXWCfdslynS_2L-pBuL-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-17" connectable="0" parent="xlXWCfdslynS_2L-pBuL-16" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="pulls data" vertex="1">
+          <mxGeometry relative="1" x="0.1636" y="-4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-19" edge="1" parent="xlXWCfdslynS_2L-pBuL-4" source="xlXWCfdslynS_2L-pBuL-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="xlXWCfdslynS_2L-pBuL-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-20" connectable="0" parent="xlXWCfdslynS_2L-pBuL-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="notifies about&lt;div&gt;success/failure&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.2084" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-23" parent="xlXWCfdslynS_2L-pBuL-4" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="&lt;div&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;Apache Airflow&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;metadata&lt;/font&gt;&lt;/div&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;[Container: PostgreSQL]&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="80" x="430" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-24" edge="1" parent="xlXWCfdslynS_2L-pBuL-4" source="xlXWCfdslynS_2L-pBuL-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="xlXWCfdslynS_2L-pBuL-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-7" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="[Container: S3]" vertex="1">
+          <mxGeometry height="110" width="112.5" x="550" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-21" edge="1" parent="1" source="xlXWCfdslynS_2L-pBuL-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="xlXWCfdslynS_2L-pBuL-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="285" y="190" />
+              <mxPoint x="606" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xlXWCfdslynS_2L-pBuL-22" connectable="0" parent="xlXWCfdslynS_2L-pBuL-21" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="uploads results to" vertex="1">
+          <mxGeometry relative="1" x="0.1185" y="-4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
