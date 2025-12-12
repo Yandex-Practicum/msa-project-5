@@ -1,4 +1,4 @@
-CREATE TABLE products  (
+CREATE TABLE IF NOT EXISTS products  (
     productId BIGINT NOT NULL PRIMARY KEY,
     productSku BIGINT NOT NULL,
     productName VARCHAR(20),
@@ -6,7 +6,7 @@ CREATE TABLE products  (
     productData VARCHAR(120)
 );
 
-CREATE TABLE loyality_data  (
+CREATE TABLE IF NOT EXISTS loyality_data  (
     productSku BIGINT NOT NULL PRIMARY KEY,
     loyalityData VARCHAR(120)
 );

@@ -1,0 +1,28 @@
+groups:
+  - name: spring_batch_alerts
+    interval: 10s
+    rules:
+      - alert: HighBatchJobFailureRate
+        expr: rate(spring_batch_job_seconds_count{status="FAILED"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High batch job failure rate detected"
+          description: "Job {{ $labels.job_name }} failure rate is {{ $value }} per second"
+      - alert: HighMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High JVM heap memory usage"
+          description: "JVM heap usage is above 85%: {{ $value }}"
+      - alert: LongRunningBatchJob
+        expr: spring_batch_job_active_count > 0 AND time() - spring_batch_job_start_time_seconds > 360
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Batch job running too long"
+          description: "Job {{ $labels.job_name }} has been running for more than 6 minutes"
