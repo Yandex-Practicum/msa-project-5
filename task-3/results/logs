@@ -1,0 +1,90 @@
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl apply -f k8s/postgres.yaml
+deployment.apps/postgres created
+service/postgres created
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get pods
+NAME                        READY   STATUS              RESTARTS   AGE
+postgres-57bdc485f7-qgdvk   0/1     ContainerCreating   0          5s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP    11m
+postgres     ClusterIP   10.108.78.212   <none>        5432/TCP   11s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get pods
+NAME                        READY   STATUS              RESTARTS   AGE
+postgres-57bdc485f7-qgdvk   0/1     ContainerCreating   0          26s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get pods
+NAME                        READY   STATUS              RESTARTS   AGE
+postgres-57bdc485f7-qgdvk   0/1     ContainerCreating   0          36s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl exec -it deployment/postgres -- psql -U analytics_user logistics
+psql (15.15 (Debian 15.15-1.pgdg13+1))
+Type "help" for help.
+
+logistics=# psql
+logistics-# CREATE TABLE shipments (
+    id SERIAL PRIMARY KEY,
+    client_name TEXT,
+    origin TEXT,
+    destination TEXT,
+    price NUMERIC,
+    created_at TIMESTAMP DEFAULT now()
+);
+
+INSERT INTO shipments (client_name, origin, destination, price)
+VALUES
+('Client A', 'Moscow', 'Berlin', 1200),
+('Client B', 'Paris', 'Rome', 900),
+('Client C', 'Madrid', 'Warsaw', 1500);
+ERROR:  syntax error at or near "psql"
+LINE 1: psql
+        ^
+ERROR:  relation "shipments" does not exist
+LINE 1: INSERT INTO shipments (client_name, origin, destination, pri...
+                    ^
+logistics=# CREATE TABLE shipments (
+    id SERIAL PRIMARY KEY,
+    client_name TEXT,
+    origin TEXT,
+    destination TEXT,
+    price NUMERIC,
+    created_at TIMESTAMP DEFAULT now()
+);
+
+INSERT INTO shipments (client_name, origin, destination, price)
+VALUES
+('Client A', 'Moscow', 'Berlin', 1200),
+('Client B', 'Paris', 'Rome', 900),
+('Client C', 'Madrid', 'Warsaw', 1500);
+CREATE TABLE
+INSERT 0 3
+logistics=# SELECT * FROM shipments;
+ id | client_name | origin | destination | price |         created_at
+----+-------------+--------+-------------+-------+----------------------------
+  1 | Client A    | Moscow | Berlin      |  1200 | 2025-12-19 13:03:39.689298
+  2 | Client B    | Paris  | Rome        |   900 | 2025-12-19 13:03:39.689298
+  3 | Client C    | Madrid | Warsaw      |  1500 | 2025-12-19 13:03:39.689298
+(3 rows)
+
+logistics=# \q
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl apply -f k8s/secret.yaml
+secret/postgres-secret configured
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl apply -f k8s/configmap.yaml
+configmap/export-config configured
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ docker images | grep shipments-exporter
+shipments-exporter                        latest    ecfc0f39329b   5 minutes ago   135MB
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl apply -f k8s/cronjob.yaml
+cronjob.batch/shipments-export configured
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl create job \
+  --from=cronjob/shipments-export \
+  shipments-export-manual-1
+job.batch/shipments-export-manual-1 created
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get jobs
+NAME                        STATUS     COMPLETIONS   DURATION   AGE
+shipments-export-manual     Failed     0/1           6m9s       6m9s
+shipments-export-manual-1   Complete   1/1           3s         6s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl get pods
+NAME                              READY   STATUS      RESTARTS   AGE
+postgres-57bdc485f7-qgdvk         1/1     Running     0          3m53s
+shipments-export-manual-1-l57pr   0/1     Completed   0          17s
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$ kubectl logs job/shipments-export-manual-1
+Exported 3 rows to /data/shipments.csv
+vvolkovskiy@vvolkovskiy-ThinkPad-E15-Gen-3:~/src/msa-project-5/task-3/results$
+

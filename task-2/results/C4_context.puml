@@ -1,0 +1,17 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(b2bClient, "B2B Client", "Получает прайс-листы в CSV/XLS")
+
+System(k8sCluster, "Kubernetes Cluster", "Облачная инфраструктура микросервисов")
+
+SystemDb(postgresDB, "PostgreSQL", "Хранение продуктов, категорий, клиентов и цен")
+System_Ext(storage, "Облачное хранилище (S3)", "Сохраняет сгенерированные CSV/XLS файлы")
+System_Ext(monitoring, "Мониторинг и логирование", "Prometheus/Grafana или ELK")
+
+Rel(b2bClient, storage, "Получает CSV/XLS файлы")
+Rel(k8sCluster, postgresDB, "Читает данные")
+Rel(k8sCluster, storage, "Сохраняет CSV/XLS файлы")
+Rel(k8sCluster, monitoring, "Отправляет логи и метрики")
+
+@enduml

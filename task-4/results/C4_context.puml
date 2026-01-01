@@ -1,0 +1,17 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(warehouse_employee, "Сотрудник склада", "Загружает отчёты об остатках")
+
+System(tradeware, "TradeWare Platform", "Управление складскими остатками")
+
+System_Ext(gcs, "Google Cloud Storage", "Хранилище файлов")
+System_Ext(postgres, "PostgreSQL", "БД номенклатуры")
+System_Ext(batch_meta, "Batch Metadata DB", "Метаданные выполнения batch-job")
+
+Rel(warehouse_employee, tradeware, "Загружает отчёты")
+Rel(tradeware, gcs, "Сохраняет файлы")
+Rel(tradeware, postgres, "Читает и обновляет данные")
+Rel(tradeware, batch_meta, "Хранит статус ETL")
+
+@enduml

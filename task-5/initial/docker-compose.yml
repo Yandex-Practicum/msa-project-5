@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   postgresdb:
@@ -11,47 +10,67 @@ services:
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/schema-all.sql
 
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
+    image: elasticsearch:8.14.3
     platform: linux/amd64
     container_name: 'elasticsearch'
     restart: 'unless-stopped'
+    volumes:
+      - './elasticsearch/conf.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro'
+      - './elasticsearch/data:/usr/share/elasticsearch/data'
+    environment:
+      ES_JAVA_OPTS: "-Xmx1G"
+      discovery.type: single-node
     ports:
       - '9200:9200'
       - '9300:9300'
-    environment:
-      - 'discovery.type=single-node'
-      - 'xpack.security.enabled=false'
-      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
     healthcheck:
       test: 'curl -f http://localhost:9200 || exit 1'
 
   logstash:
-    image: 'docker.elastic.co/logstash/logstash:7.17.28'
+    image: logstash:8.14.3
     container_name: 'logstash'
     restart: 'unless-stopped'
     ports:
-      - '5044:5044'
+      - "5044:5044"
+      - "5010:5000"
+      - "9600:9600"
     volumes:
-      - './logstash/pipeline:/usr/share/logstash/pipeline/'
+      - './logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro'
+      - './logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro'
+      - './logstash/pipelines:/usr/share/logstash/config/pipelines:ro'
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms512m"
     depends_on:
-      - 'elasticsearch'
+      elasticsearch:
+        condition: service_healthy
     healthcheck:
-      test: 'curl -f http://localhost:9600 || exit 1'
+      test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kibana:
-    image: 'docker.elastic.co/kibana/kibana:7.17.28'
+    image: 'kibana:8.14.3'
     container_name: 'kibana'
     restart: 'unless-stopped'
+    volumes:
+      - './kibana/conf.yml:/usr/share/kibana/config/kibana.yml:ro'
     ports:
       - '5601:5601'
-    environment:
-      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
+#    environment:
+#      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
     depends_on:
-      - 'elasticsearch'
+      elasticsearch:
+        condition: service_healthy
     healthcheck:
-      test: 'curl -f http://localhost:5601 || exit 1'
+      test: ["CMD-SHELL", "curl -f http://localhost:5601 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   filebeat:
     build: 'filebeat'
@@ -61,8 +80,15 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
     depends_on:
-      - 'elasticsearch'
-      - 'logstash'
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep filebeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   prometheus:
     image: 'prom/prometheus:v3.4.0'
@@ -93,10 +119,17 @@ services:
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
-    image: batch-processing
     build:
       context: .
-      dockerfile: ./Dockerfile
-    restart: no
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "5555:5555"
+    restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

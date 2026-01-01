@@ -19,4 +19,4 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: "no"
