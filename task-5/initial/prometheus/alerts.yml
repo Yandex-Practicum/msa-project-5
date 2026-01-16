@@ -1,0 +1,20 @@
+groups:
+  - name: batch-alerts
+    rules:
+      - alert: JmxExporterDown
+        expr: up{job="jmx-exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JMX Exporter down"
+          description: "Prometheus cannot scrape jmx-exporter for 2 minutes."
+
+      - alert: NoScrapesFromExporter
+        expr: rate(scrape_samples_scraped{job="jmx-exporter"}[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No metrics scraped"
+          description: "Prometheus scrapes zero samples from jmx-exporter for 5 minutes."

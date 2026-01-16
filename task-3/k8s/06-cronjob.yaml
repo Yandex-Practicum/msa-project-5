@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipment-events-export
+  namespace: task3
+spec:
+  schedule: "0 20 * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: exporter
+              image: task3-exporter:0.1
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - secretRef:
+                    name: exporter-db-secret
+                - configMapRef:
+                    name: exporter-config
+              # EXPORT_DATE можно не задавать — возьмётся сегодня UTC
+              volumeMounts:
+                - name: exports
+                  mountPath: /output
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"
+          volumes:
+            - name: exports
+              persistentVolumeClaim:
+                claimName: exports-pvc

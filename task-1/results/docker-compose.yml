@@ -1,0 +1,109 @@
+version: "3.8"
+
+x-airflow-common: &airflow-common
+  build: ./airflow
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    AIRFLOW__CORE__FERNET_KEY: "PLEASE_CHANGE_ME_FERNET_KEY"
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
+
+
+    AIRFLOW__SMTP__SMTP_HOST: mailhog
+    AIRFLOW__SMTP__SMTP_PORT: 1025
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: airflow@example.local
+    AIRFLOW__EMAIL__EMAIL_BACKEND: airflow.utils.email.send_email_smtp
+
+
+    AIRFLOW_CONN_SOURCE_PG: postgresql://etl:etl@source-postgres:5432/warehouse
+    AIRFLOW_CONN_ECHO_API: http://echo-server:80
+
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./data:/opt/airflow/data
+    - ./out:/opt/airflow/out
+    - ./airflow/logs:/opt/airflow/logs
+  depends_on:
+    - airflow-postgres
+    - mailhog
+    - source-postgres
+    - echo-server
+
+services:
+  airflow-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      airflow db migrate &&
+      airflow users create
+        --username admin
+        --password admin
+        --firstname Admin
+        --lastname User
+        --role Admin
+        --email admin@example.local
+      "
+    restart: "no"
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8081:8080"
+    restart: always
+
+  source-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: etl
+      POSTGRES_PASSWORD: etl
+      POSTGRES_DB: warehouse
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d
+      - source_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U etl -d warehouse"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  echo-server:
+    image: ealen/echo-server:0.9.2
+    environment:
+      ENABLE__ENVIRONMENT: "true"
+    ports:
+      - "8082:80"
+
+volumes:
+  airflow_pg_data:
+  source_pg_data:

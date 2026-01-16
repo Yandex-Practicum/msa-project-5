@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tradeware
+      POSTGRES_USER: tradeware
+      POSTGRES_PASSWORD: tradeware
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema-all.sql:/docker-entrypoint-initdb.d/01-schema-all.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradeware -d tradeware"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pgdata:

@@ -2,101 +2,149 @@ version: "3.8"
 
 services:
   postgresdb:
-    image: postgres
+    image: postgres:16
     restart: unless-stopped
     env_file: ./.env
     environment:
-      - POSTGRES_USER=$POSTGRESDB_USER
-      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
-      - POSTGRES_DB=$POSTGRESDB_DATABASE
+      - POSTGRES_USER=${POSTGRESDB_USER}
+      - POSTGRES_PASSWORD=${POSTGRESDB_ROOT_PASSWORD}
+      - POSTGRES_DB=${POSTGRESDB_DATABASE}
     ports:
-      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
-
+      - "${POSTGRESDB_LOCAL_PORT}:${POSTGRESDB_DOCKER_PORT}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema-all.sql:/docker-entrypoint-initdb.d/01-schema-all.sql:ro
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
     platform: linux/amd64
-    container_name: 'elasticsearch'
-    restart: 'unless-stopped'
+    container_name: elasticsearch
+    restart: unless-stopped
     ports:
-      - '9200:9200'
-      - '9300:9300'
+      - "9200:9200"
+      - "9300:9300"
     environment:
-      - 'discovery.type=single-node'
-      - 'xpack.security.enabled=false'
-      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     healthcheck:
-      test: 'curl -f http://localhost:9200 || exit 1'
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null || exit 1"]
 
   logstash:
-    image: 'docker.elastic.co/logstash/logstash:7.17.28'
-    container_name: 'logstash'
-    restart: 'unless-stopped'
+    image: docker.elastic.co/logstash/logstash:7.17.28
+    container_name: logstash
+    restart: unless-stopped
     ports:
-      - '5044:5044'
+      - "5044:5044"
     volumes:
-      - './logstash/pipeline:/usr/share/logstash/pipeline/'
+      - "./logstash/pipeline:/usr/share/logstash/pipeline/"
     depends_on:
-      - 'elasticsearch'
+      - elasticsearch
     healthcheck:
-      test: 'curl -f http://localhost:9600 || exit 1'
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9600 >/dev/null || exit 1"]
 
   kibana:
-    image: 'docker.elastic.co/kibana/kibana:7.17.28'
-    container_name: 'kibana'
-    restart: 'unless-stopped'
+    image: docker.elastic.co/kibana/kibana:7.17.28
+    container_name: kibana
+    restart: unless-stopped
     ports:
-      - '5601:5601'
+      - "5601:5601"
     environment:
-      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
-      - 'elasticsearch'
+      - elasticsearch
     healthcheck:
-      test: 'curl -f http://localhost:5601 || exit 1'
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601 >/dev/null || exit 1"]
 
   filebeat:
-    build: 'filebeat'
-    container_name: 'filebeat'
-    restart: 'unless-stopped'
+    image: docker.elastic.co/beats/filebeat:7.17.28
+    container_name: filebeat
+    user: root
+    restart: unless-stopped
     volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-      - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
+      - "./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - batch-logs:/var/log/batch:ro
     depends_on:
-      - 'elasticsearch'
-      - 'logstash'
+      - logstash
+    command: ["--strict.perms=false"]
 
   prometheus:
-    image: 'prom/prometheus:v3.4.0'
-    container_name: 'prometheus'
-    restart: 'unless-stopped'
+    image: prom/prometheus:v3.4.0
+    container_name: prometheus
+    restart: unless-stopped
     volumes:
-      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+      - "./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro"
     ports:
-      - '9090:9090'
+      - "9090:9090"
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "9090" ]
+      test: ["CMD", "sh", "-lc", "nc -z localhost 9090"]
 
   grafana:
-    image: 'grafana/grafana:12.0.1'
-    container_name: 'grafana'
-    restart: 'unless-stopped'
+    image: grafana/grafana:12.0.1
+    container_name: grafana
+    restart: unless-stopped
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
-      - 'GF_USERS_ALLOW_SIGN_UP=false'
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
-      - './grafana/provisioning:/etc/grafana/provisioning'
+      - "./grafana/provisioning:/etc/grafana/provisioning:ro"
+      - "./grafana/dashboards:/var/lib/grafana/dashboards:ro"
+      - grafana-data:/var/lib/grafana
     depends_on:
-      - 'prometheus'
+      - prometheus
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "3000" ]
+      test: ["CMD", "sh", "-lc", "nc -z localhost 3000"]
+
+  jmx-exporter:
+    image: bitnami/jmx-exporter:latest
+    container_name: jmx-exporter
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "9404:9404"
+    volumes:
+      - "./jmx-exporter/config.yml:/config.yml:ro"
+    command: [ "9404", "/config.yml" ]
+
+
 
   app:
-    depends_on:
-      - postgresdb
-      - filebeat1
-      - grafana
+    user: "0:0"
     image: batch-processing
+    container_name: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: "no"
+    depends_on:
+      - postgresdb
+      - logstash
+      - prometheus
+      - grafana
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgresdb:${POSTGRESDB_DOCKER_PORT}/${POSTGRESDB_DATABASE}"
+      SPRING_DATASOURCE_USERNAME: "${POSTGRESDB_USER}"
+      SPRING_DATASOURCE_PASSWORD: "${POSTGRESDB_ROOT_PASSWORD}"
+
+      LOG_PATH: "/var/log/batch/batch.log"
+
+      JAVA_TOOL_OPTIONS: >-
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=9010
+        -Dcom.sun.management.jmxremote.rmi.port=9010
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Djava.rmi.server.hostname=app
+    ports:
+      - "9010:9010"
+    volumes:
+      - batch-logs:/var/log/batch
+
+volumes:
+  pgdata:
+  batch-logs:
+  grafana-data:

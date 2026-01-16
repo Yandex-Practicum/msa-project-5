@@ -1,0 +1,4 @@
+sku,name,category,base_price,loyalty_code
+SKU-001,Цемент М500,cement,500.00,GOLD
+SKU-002,Песок речной,sand,120.00,SILVER
+SKU-003,Щебень 20-40,gravel,300.00,NONE
