@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: task3
+data:
+  01_init.sql: |
+    CREATE TABLE IF NOT EXISTS shipment_events (
+      event_id BIGSERIAL PRIMARY KEY,
+      shipment_id BIGINT NOT NULL,
+      event_type TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    INSERT INTO shipment_events (shipment_id, event_type, created_at) VALUES
+      (1001, 'CREATED', NOW() - INTERVAL '2 hours'),
+      (1001, 'PICKED_UP', NOW() - INTERVAL '1 hour'),
+      (1002, 'CREATED', NOW() - INTERVAL '3 hours'),
+      (1002, 'DELIVERED', NOW() - INTERVAL '30 minutes');

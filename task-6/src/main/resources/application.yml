@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5434/tradeware
+    username: tradeware
+    password: tradeware
+    driver-class-name: org.postgresql.Driver
+
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+      names: productEtlJob
+
+app:
+  input-file: ./data/product-data.csv
+
+  chunk-size: 1000
