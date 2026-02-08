@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipments-export
+spec:
+  schedule: "0 20 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: exporter
+              image: shipments-export:latest
+              imagePullPolicy: Never
+              env:
+                - name: DB_HOST
+                  value: "postgres"
+                - name: DB_NAME
+                  value: "db"
+                - name: DB_USER
+                  value: "user"
+                - name: DB_PASS
+                  value: "pass"
+              volumeMounts:
+                - name: export-volume
+                  mountPath: /tmp
+          volumes:
+            - name: export-volume
+              emptyDir: {}
+          restartPolicy: OnFailure
+      backoffLimit: 3

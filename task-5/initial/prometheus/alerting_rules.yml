@@ -1,0 +1,11 @@
+groups:
+  - name: test-alert
+    rules:
+      - alert: TestAlert
+        expr: vector(1)
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Test alert"
+          description: "Test alert"

@@ -15,16 +15,29 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
 
 	private static final Logger log = LoggerFactory.getLogger(JobCompletionNotificationListener.class);
 
-	private final JdbcTemplate jdbcTemplate;
+	private final JobMetricsService jobMetricsService;
 
-	public JobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
+	public JobCompletionNotificationListener(JobMetricsService jobMetricsService) {
+		this.jobMetricsService = jobMetricsService;
+	}
+
+	@Override
+	public void beforeJob(JobExecution jobExecution) {
+		String jobName = jobExecution.getJobInstance().getJobName();
+		log.info("Starting job: {}", jobName);
+		jobMetricsService.increaseCounter();
 	}
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
+		jobMetricsService.decreaseCounter();
+		String job = jobExecution.getJobInstance().getJobName();
+
 		if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-			// todo
+			jobMetricsService.success(job);
+		} else {
+			jobMetricsService.failure(job);
 		}
+		log.info("Job {} completed", job);
 	}
 }

@@ -2,15 +2,31 @@ version: "3.8"
 
 services:
   postgresdb:
-    image: postgres
+    image: postgres:17
     restart: unless-stopped
     env_file: ./.env
     environment:
-      - POSTGRES_USER=$POSTGRESDB_USER
-      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
-      - POSTGRES_DB=$POSTGRESDB_DATABASE
+      - POSTGRES_USER=tradeware
+      - POSTGRES_PASSWORD=tradeware
+      - POSTGRES_DB=productsdb
     ports:
-      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema-all.sql:/docker-entrypoint-initdb.d/schema-all.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tradeware -d productsdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - '9093:9093'
 
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
@@ -54,12 +70,12 @@ services:
       test: 'curl -f http://localhost:5601 || exit 1'
 
   filebeat:
-    build: 'filebeat'
-    container_name: 'filebeat'
-    restart: 'unless-stopped'
+    build: ./filebeat
+    container_name: filebeat
+    user: root
+    restart: unless-stopped
     volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
-      - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
+      - ./logs:/logs:ro
     depends_on:
       - 'elasticsearch'
       - 'logstash'
@@ -70,6 +86,7 @@ services:
     restart: 'unless-stopped'
     volumes:
       - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus/alerting_rules.yml:/etc/prometheus/alerting_rules.yml'
     ports:
       - '9090:9090'
     healthcheck:
@@ -92,11 +109,21 @@ services:
 
   app:
     depends_on:
-      - postgresdb
-      - filebeat1
-      - grafana
+      postgresdb:
+        condition: service_healthy
     image: batch-processing
+    ports:
+      - 8080:8080
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: unless-stopped
+    volumes:
+      - ./logs:/logs
+    environment:
+      - SPRING_BATCH_JOB_ENABLED=false
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_MAIN_WEB-APPLICATION-TYPE=servlet
+
+volumes:
+  pgdata:

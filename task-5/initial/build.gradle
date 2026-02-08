@@ -20,8 +20,13 @@ dependencies {
 
 	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 	implementation "net.logstash.logback:logstash-logback-encoder:8.1"
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	implementation 'io.micrometer:micrometer-core'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'

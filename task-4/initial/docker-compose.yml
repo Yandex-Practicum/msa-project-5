@@ -2,21 +2,40 @@ version: "3.8"
 
 services:
   postgresdb:
-    image: postgres
+    image: postgres:17
     restart: unless-stopped
     env_file: ./.env
     environment:
-      - POSTGRES_USER=$POSTGRESDB_USER
-      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
-      - POSTGRES_DB=$POSTGRESDB_DATABASE
+      - POSTGRES_USER=tradeware
+      - POSTGRES_PASSWORD=tradeware
+      - POSTGRES_DB=productsdb
     ports:
-      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema-all.sql:/docker-entrypoint-initdb.d/schema-all.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tradeware -d productsdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   app:
     depends_on:
-      - postgresdb
+      postgresdb:
+        condition: service_healthy
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: "no"
+    command: >
+      sh -c "
+      echo 'Waiting for PostgreSQL...' &&
+      sleep 10 &&
+      java -jar /app.jar
+      "
+
+volumes:
+  pgdata:
