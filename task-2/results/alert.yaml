@@ -1,0 +1,6 @@
+- alert: PriceListGenerationFailed
+  expr: kube_job_status_failed{job_name=~"price-list-generator-.*"} > 0
+  for: 5m
+  annotations:
+    summary: "Ошибка генерации прайс-листов"
+    description: "Задание {{ $labels.job_name }} завершилось с ошибкой"

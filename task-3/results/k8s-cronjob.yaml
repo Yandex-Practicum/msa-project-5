@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-data-export
+  namespace: logistics
+  labels:
+    app: data-export
+    team: analytics
+spec:
+  schedule: "0 14 * * *"  # Ежедневно в 20:00 по времени кластера
+  timeZone: "Europe/Moscow"  # Требуется K8s 1.27+ (удалить для старых версий)
+  concurrencyPolicy: Forbid  # Запрет параллельных запусков
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 10
+  startingDeadlineSeconds: 600  # Макс. задержка запуска после расписания
+  jobTemplate:
+    spec:
+      backoffLimit: 3  # Количество попыток при ошибке
+      template:
+        spec:
+          containers:
+          - name: exporter
+            image: registry.company.com/logistics/data-exporter:1.0
+            imagePullPolicy: IfNotPresent
+            envFrom:
+            - secretRef:
+                name: db-credentials
+            env:
+            - name: OUTPUT_DIR
+              value: "/output"
+            volumeMounts:
+            - name: export-storage
+              mountPath: /output
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"   # Достаточно для 1 млн строк
+                cpu: "500m"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+          volumes:
+          - name: export-storage
+            persistentVolumeClaim:
+              claimName: export-storage
+          restartPolicy: OnFailure
+          serviceAccountName: export-sa  # Рекомендуется создать отдельный SA
+          nodeSelector:
+            node-role.kubernetes.io/worker: "true"  # Запуск только на рабочих нодах

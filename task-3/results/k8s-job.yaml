@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-export-job
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: data-exporter
+          image: data-exporter:latest
+          imagePullPolicy: Never
+          env:
+            - { name: TABLE_NAME, value: shipments }
+            - { name: OUTPUT_DIR, value: /data/exports }
+            - { name: DB_HOST, value: my-postgres-postgresql }
+            - { name: DB_PORT, value: "5432" }
+            - { name: DB_NAME, value: logistics }
+            - { name: DB_USER, value: postgres }
+            - { name: DB_PASSWORD, value: postgres }
+          volumeMounts:
+            - name: export-data
+              mountPath: /data/exports
+      volumes:
+        - name: export-data
+          persistentVolumeClaim:
+            claimName: data-my-postgres-postgresql-0

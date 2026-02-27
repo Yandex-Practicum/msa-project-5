@@ -1,0 +1,66 @@
+@startuml TradeWare_Architecture_with_Spring_Batch
+
+package "Внешние системы" {
+  [Логистические партнёры] as partners
+  [Google Cloud Storage\nХранилище отчётов] as gcs
+}
+
+package "Фронтенд" {
+  [Web UI\nAngular + WebSockets] as ui
+}
+
+package "Бэкенд (монолит)" {
+  [WildFly Application Server\nJava 11] as wildfly
+  [REST API\nЧтение остатков] as online_api
+}
+
+package "Пакетная обработка" {
+  [Spring Batch Service\nJava 11] as batch_service
+  database "Batch Repository\nPostgreSQL" as job_repo
+}
+
+package "Хранилище данных" {
+  database "Main DB\nPostgreSQL\n(номенклатура)" as main_db
+  database "Reference Data\nPostgreSQL\n(справочники)" as ref_data
+}
+
+package "Мониторинг" {
+  [Prometheus\nМетрики] as prometheus
+  [Grafana\nДашборды] as grafana
+  [Loki\nЛоги] as loki
+}
+
+' Внешние взаимодействия
+partners --> gcs : CSV-отчёт
+gcs --> batch_service : событие 'файл загружен'
+
+' Онлайн-обработка
+ui --> online_api : запрос остатков
+online_api --> main_db : чтение данных
+
+' Пакетная обработка
+batch_service --> main_db : партиционированная обработка
+batch_service --> ref_data : валидация и обогащение
+batch_service --> job_repo : сохранение состояния джобов
+
+' Мониторинг
+batch_service --> prometheus : экспорт метрик
+prometheus --> grafana
+batch_service --> loki : структурированные логи
+
+' Интеграция монолита и батч-сервиса
+wildfly ..> batch_service : триггер запуска джоба\n(через очередь событий)
+
+' Связь между компонентами монолита
+wildfly --> online_api
+
+note right of batch_service
+  **Ключевые возможности Spring Batch:**
+  • Chunk-oriented processing (чанки по 500–1000 записей)
+  • Remote Partitioning для параллельной обработки
+  • Retry/Skip политики при ошибках
+  • Сохранение состояния выполнения
+  • Интеграция с Micrometer для мониторинга
+end note
+
+@enduml

@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '3.5.3'
+	id 'org.springframework.boot' version '3.5.7'
 	id 'java'
 }
 
@@ -16,9 +16,13 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
 //	runtimeOnly 'org.hsqldb:hsqldb'
-	implementation("org.postgresql:postgresql:42.2.5")
+	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.postgresql:postgresql:42.2.5'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
 }
 
 test {

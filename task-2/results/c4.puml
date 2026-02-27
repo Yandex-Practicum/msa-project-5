@@ -1,0 +1,21 @@
+@startuml Система генерации прайс-листов (To Be)
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(b2b_client, "B2B-клиент", "Получает ежедневные прайс-листы")
+
+Boundary(k8s_cluster, "Kubernetes Cluster") {
+    Container(cronjob, "Price List Generator", "CronJob", "Запуск ежедневно в 6:00")
+    ContainerDb(postgres, "PostgreSQL", "Хранение данных: products, categories, clients, client_prices")
+}
+
+System_Ext(storage, "File Storage", "S3 / NFS (хранение CSV-файлов)")
+System_Ext(monitoring, "Monitoring System", "Prometheus + Grafana")
+System_Ext(logging, "Logging System", "Loki + Grafana")
+
+Rel(postgres, cronjob, "SELECT данные", "JDBC/SQL")
+Rel(cronjob, storage, "Сохраняет CSV", "S3 API / NFS mount")
+Rel(cronjob, monitoring, "Метрики выполнения", "Prometheus metrics")
+Rel(cronjob, logging, "Логи выполнения", "stdout → Loki")
+Rel(storage, b2b_client, "Доступ к файлам", "HTTP / SFTP")
+Rel(monitoring, b2b_client, "Уведомления об ошибках", "Email / Slack")
+@enduml

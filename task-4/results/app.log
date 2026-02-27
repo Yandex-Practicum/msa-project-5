@@ -1,0 +1,31 @@
+app-1         |
+app-1         |   .   ____          _            __ _ _
+app-1         |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+app-1         | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+app-1         |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+app-1         |   '  |____| .__|_| |_|_| |_\__, | / / / /
+app-1         |  =========|_|==============|___/=/_/_/_/
+app-1         |
+app-1         |  :: Spring Boot ::                (v3.5.7)
+app-1         |
+app-1         | 2026-02-19T21:11:20.867Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 1 (/app.jar started by root in /)
+app-1         | 2026-02-19T21:11:20.871Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : No active profile set, falling back to 1 default profile: "default"
+app-1         | 2026-02-19T21:11:21.573Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+app-1         | 2026-02-19T21:11:21.754Z  INFO 1 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7e2f86e6
+app-1         | 2026-02-19T21:11:21.757Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+app-1         | 2026-02-19T21:11:22.143Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Started BatchProcessingApplication in 1.7 seconds (process running for 2.115)
+app-1         | 2026-02-19T21:11:22.148Z  INFO 1 --- [           main] o.s.b.a.b.JobLauncherApplicationRunner   : Running default command line with: []
+app-1         | 2026-02-19T21:11:22.190Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] launched with the following parameters: [{}]
+app-1         | 2026-02-19T21:11:22.225Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [step0]
+app-1         | 2026-02-19T21:11:22.279Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [step0] executed in 52ms
+app-1         | 2026-02-19T21:11:22.297Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [step1]
+app-1         | 2026-02-19T21:11:22.314Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]) into (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_on])
+app-1         | 2026-02-19T21:11:22.322Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]) into (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_on])
+app-1         | 2026-02-19T21:11:22.324Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]) into (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on])
+app-1         | 2026-02-19T21:11:22.336Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]) into (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_on])
+app-1         | 2026-02-19T21:11:22.339Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]) into (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on])
+app-1         | 2026-02-19T21:11:22.346Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [step1] executed in 48ms
+app-1         | 2026-02-19T21:11:22.365Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] completed with the following parameters: [{}] and the following status: [COMPLETED] in 154ms
+app-1         | 2026-02-19T21:11:22.373Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+app-1         | 2026-02-19T21:11:22.376Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+app-1 exited with code 0

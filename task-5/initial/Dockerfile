@@ -1,5 +1,5 @@
-FROM openjdk:24-slim
+FROM eclipse-temurin:17
 # 8080
-WORKDIR .
+WORKDIR /
 COPY build/libs/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]

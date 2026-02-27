@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: export-storage
+  namespace: logistics
+spec:
+  accessModes:
+    - ReadWriteMany  # Для доступа из нескольких подов
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-storage  # Заменить на ваш класс хранилища (например, aws-efs, azure-file)
