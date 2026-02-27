@@ -1,0 +1,50 @@
+@startuml Мониторинг
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(employee, "Сотрудник склада", "Загружает отчёты об остатках")
+
+System_Boundary(tradeware, "TradeWare System") {
+    Container(web_app, "Web Application", "Angular", "Интерфейс для загрузки отчётов")
+    Container(legacy_monolith, "Legacy Monolith", "Java 11, WildFly", "Обработка запросов в реальном времени")
+    Container(etl_service, "ETL Service", "Spring Boot, Spring Batch", "Пакетная обработка файлов")
+    
+    ContainerDb(product_db, "Products Database", "PostgreSQL", "Текущие остатки товаров")
+    ContainerDb(reference_db, "Reference Database", "PostgreSQL", "Справочные данные")
+    
+    Container(gcs, "File Storage", "Google Cloud Storage", "Хранение CSV-файлов")
+    Container(queue, "Message Queue", "RabbitMQ", "Асинхронная коммуникация")
+}
+
+System_Boundary(observability, "Observability Stack") {
+    Container(prometheus, "Prometheus", "Time-series DB", "Сбор и хранение метрик")
+    Container(grafana, "Grafana", "Visualization", "Дашборды и алерты")
+    Container(alertmanager, "Alertmanager", "Alerting", "Управление оповещениями")
+    
+    Container(elasticsearch, "Elasticsearch", "Search Engine", "Хранение логов")
+    Container(logstash, "Logstash", "Log Processor", "Обработка логов")
+    Container(kibana, "Kibana", "Visualization", "Анализ логов")
+    Container(filebeat, "Filebeat", "Log Shipper", "Сбор логов")
+}
+
+Rel(employee, web_app, "Загружает CSV", "HTTPS")
+Rel(web_app, legacy_monolith, "Запрос на загрузку", "REST")
+Rel(legacy_monolith, gcs, "Сохраняет файл", "REST")
+Rel(legacy_monolith, queue, "Отправляет событие", "AMQP")
+Rel(queue, etl_service, "Получает событие", "AMQP")
+Rel(etl_service, gcs, "Читает файл", "REST")
+Rel(etl_service, reference_db, "Обогащает данными", "JDBC")
+Rel(etl_service, product_db, "Сохраняет результаты", "JDBC")
+
+' Метрики и логи
+Rel(etl_service, prometheus, "Отправляет метрики", "HTTP /actuator/prometheus")
+Rel(etl_service, filebeat, "Генерирует логи", "stdout")
+Rel(filebeat, logstash, "Отправляет логи", "Beats protocol")
+Rel(logstash, elasticsearch, "Индексирует логи", "HTTP")
+Rel(elasticsearch, kibana, "Визуализирует логи", "HTTP")
+
+Rel(prometheus, grafana, "Предоставляет данные", "PromQL")
+Rel(grafana, alertmanager, "Отправляет алерты", "Webhook")
+
+Rel_U(legacy_monolith, product_db, "Читает данные", "JDBC")
+
+@enduml

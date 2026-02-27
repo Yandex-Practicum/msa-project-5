@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgresdb:
-    image: postgres
+    image: postgres:16
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -11,12 +11,32 @@ services:
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRESDB_USER"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app-network
 
   app:
-    depends_on:
-      - postgresdb
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
+    depends_on:
+      postgresdb:
+        condition: service_healthy
     restart: no
+    networks:
+      - app-network
+
+volumes:
+  postgres-volume:
+
+networks:
+  app-network:
+    driver: bridge

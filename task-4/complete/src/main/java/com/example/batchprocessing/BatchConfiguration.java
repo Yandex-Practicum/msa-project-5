@@ -20,7 +20,37 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 @Configuration
 public class BatchConfiguration {
+	@Bean
+    public FlatFileItemReader<Loyality> loyalityReader() {
+        return new FlatFileItemReaderBuilder<Loyality>()
+            .name("loyalityItemReader")
+            .resource(new ClassPathResource("loyality_data.csv"))
+            .delimited()
+            .names("productSku", "loyalityData")
+            .targetType(Loyality.class)
+            .build();
+    }
 
+    @Bean
+    public JdbcBatchItemWriter<Loyality> loyalityWriter(DataSource dataSource) {
+        return new JdbcBatchItemWriterBuilder<Loyality>()
+            .sql("INSERT INTO loyality_data (productSku, loyalityData) " +
+                    "VALUES (:productSku, :loyalityData)")
+            .dataSource(dataSource)
+            .beanMapped()
+            .build();
+    }
+
+    @Bean
+    public Step step0(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
+            FlatFileItemReader<Loyality> loyalityReader, JdbcBatchItemWriter<Loyality> loyalityWriter) {
+        return new StepBuilder("step0", jobRepository)
+                .<Loyality, Loyality>chunk(10, transactionManager)
+                .reader(loyalityReader)
+                .writer(loyalityWriter)
+                .build();
+    }
+	
 	@Bean
 	public FlatFileItemReader<Product> reader() {
 		return new FlatFileItemReaderBuilder<Product>()
@@ -38,7 +68,7 @@ public class BatchConfiguration {
 	}
 
 	@Bean
-	public JdbcBatchItemWriter<Product> writer(DataSource dataSource) {
+	public JdbcBatchItemWriter<Product> productWriter(DataSource dataSource) {
 		return new JdbcBatchItemWriterBuilder<Product>()
 			.sql("INSERT INTO products (productId, productSku, productName, productAmount, productData) " +
 					"VALUES (:productId, :productSku, :productName, :productAmount, :productData)")
@@ -48,21 +78,22 @@ public class BatchConfiguration {
 	}
 
 	@Bean
-	public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
+	public Job importProductJob(JobRepository jobRepository, Step step0, Step step1, JobCompletionNotificationListener listener) {
 		return new JobBuilder("importProductJob", jobRepository)
 			.listener(listener)
-			.start(step1)
+            .start(step0) // loyality
+			.next(step1)  // product
 			.build();
 	}
 
 	@Bean
 	public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
-					  FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> writer) {
+					  FlatFileItemReader<Product> reader, ProductItemProcessor processor, JdbcBatchItemWriter<Product> productWriter) {
 		return new StepBuilder("step1", jobRepository)
 			.<Product, Product>chunk(3, transactionManager)
 			.reader(reader)
 			.processor(processor)
-			.writer(writer)
+			.writer(productWriter)
 			.build();
 	}
 

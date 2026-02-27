@@ -1,0 +1,152 @@
+services:
+  postgresdb:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=$POSTGRESDB_USER
+      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
+      - POSTGRES_DB=$POSTGRESDB_DATABASE
+    ports:
+      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRESDB_USER"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app-network
+
+  app:
+    image: batch-processing
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - OTEL_SERVICE_NAME=batch-processing-app
+    networks:
+      - app-network
+
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
+    platform: linux/amd64
+    container_name: 'elasticsearch'
+    restart: 'unless-stopped'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    environment:
+      - 'discovery.type=single-node'
+      - 'xpack.security.enabled=false'
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    healthcheck:
+      test: 'curl -f http://localhost:9200 || exit 1'
+    networks:
+      - app-network
+
+  logstash:
+    image: 'docker.elastic.co/logstash/logstash:7.17.28'
+    container_name: 'logstash'
+    restart: 'unless-stopped'
+    ports:
+      - '5044:5044'
+    volumes:
+      - './logstash/pipeline:/usr/share/logstash/pipeline/'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:9600 || exit 1'
+    networks:
+      - app-network
+
+  kibana:
+    image: 'docker.elastic.co/kibana/kibana:7.17.28'
+    container_name: 'kibana'
+    restart: 'unless-stopped'
+    ports:
+      - '5601:5601'
+    environment:
+      - 'ELASTICSEARCH_HOSTS=http://elasticsearch:9200'
+    depends_on:
+      - 'elasticsearch'
+    healthcheck:
+      test: 'curl -f http://localhost:5601 || exit 1'
+    networks:
+      - app-network
+
+  filebeat:
+    build: 'filebeat'
+    container_name: 'filebeat'
+    restart: 'unless-stopped'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro'
+    depends_on:
+      - 'elasticsearch'
+      - 'logstash'
+    networks:
+      - app-network
+
+  prometheus:
+    image: 'prom/prometheus:v3.4.0'
+    container_name: 'prometheus'
+    restart: 'unless-stopped'
+    volumes:
+      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+    ports:
+      - '9090:9090'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9090" ]
+    networks:
+      - app-network
+
+  grafana:
+    image: 'grafana/grafana:12.0.1'
+    container_name: 'grafana'
+    restart: 'unless-stopped'
+    ports:
+      - '3000:3000'
+    environment:
+      - 'GF_USERS_ALLOW_SIGN_UP=false'
+    volumes:
+      - './grafana/provisioning:/etc/grafana/provisioning'
+    depends_on:
+      - 'prometheus'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "3000" ]
+    networks:
+      - app-network
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: 'jaeger'
+    restart: 'unless-stopped'
+    ports:
+      - '16686:16686'  # Jaeger UI
+      - '4318:4318'    # OTLP HTTP receiver
+      - '4317:4317'    # OTLP gRPC receiver
+    environment:
+      - 'COLLECTOR_OTLP_ENABLED=true'
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:16686" ]
+    networks:
+      - app-network
+
+volumes:
+  postgres-volume:
+
+networks:
+  app-network:
+    driver: bridge

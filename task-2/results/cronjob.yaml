@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: price-list-generator
+spec:
+  schedule: "0 6 * * *"
+  timeZone: "Europe/Moscow"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: generator
+            image: registry.company.com/price-generator:1.0
+            envFrom:
+            - secretRef:
+                name: db-credentials
+            volumeMounts:
+            - name: output-storage
+              mountPath: /output
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "500m"
+          volumes:
+          - name: output-storage
+            persistentVolumeClaim:
+              claimName: price-list-storage
+          restartPolicy: OnFailure
