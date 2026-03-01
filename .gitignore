@@ -1,0 +1,23 @@
+# Игнорировать символические ссылки и логи
+task-1/results/logs/scheduler/latest
+task-1/results/logs/scheduler/*.log
+task-1/results/logs/dag_id=*/
+*.log
+logs/
+
+# IDE directories
+.idea/
+.vscode/
+*.sln.DotSettings.user
+*.DotSettings.user
+**/.idea/
+**/*.DotSettings.user
+
+# IDE project files
+task-3/results/app/ExportApp/.idea/
+task-3/results/app/ExportApp/*.DotSettings.user
+task-3/results/app/ExportApp/ExportApp.sln.DotSettings.user
+
+# Docker compose generated files
+task-3/results/app/ExportApp/Docker/docker-compose.dev.generated.override.yml
+**/docker-compose.*.generated.*

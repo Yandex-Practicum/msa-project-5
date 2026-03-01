@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BatchProcessingApplication {
 
 	public static void main(String[] args) {
-		System.exit(SpringApplication.exit(SpringApplication.run(BatchProcessingApplication.class, args)));
+		// Просто запускаем приложение без System.exit()
+		SpringApplication.run(BatchProcessingApplication.class, args);
 	}
 }

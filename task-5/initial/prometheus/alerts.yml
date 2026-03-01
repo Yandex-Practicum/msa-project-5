@@ -1,0 +1,90 @@
+groups:
+  - name: batch-processing-alerts
+    rules:
+      # Приложение упало
+      - alert: BatchAppDown
+        expr: up{job="batch-processing"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: batch-processing
+        annotations:
+          summary: "Приложение batch-processing недоступно"
+          description: "Метрика 'up' = 0 более 1 минуты. Проверьте логи контейнера app."
+
+      # Высокая загрузка CPU
+      - alert: HighCpuUsage
+        expr: process_cpu_usage{job="batch-processing"} > 0.7
+        for: 2m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Высокая загрузка CPU ({{ $value | humanizePercentage }})"
+          description: "Загрузка CPU превышает 70% в течение 2 минут."
+
+      # Высокое использование памяти
+      - alert: HighMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap", job="batch-processing"} / jvm_memory_max_bytes{area="heap", job="batch-processing"}) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Высокое использование памяти ({{ $value | humanizePercentage }})"
+          description: "Использование heap памяти превышает 80%."
+
+      # Ошибки в job'ах
+      - alert: BatchJobFailed
+        expr: increase(batch_job_failed_total{job="batch-processing"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: batch-processing
+        annotations:
+          summary: "Batch job завершился с ошибкой"
+          description: "Обнаружены ошибки в выполнении batch job за последние 5 минут."
+
+      # Медленная обработка данных
+      - alert: SlowProcessing
+        expr: rate(batch_items_processed_total{job="batch-processing"}[5m]) < 10
+        for: 5m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Низкая скорость обработки данных"
+          description: "Обрабатывается менее 10 записей в минуту."
+
+      # Нет данных
+      - alert: NoDataProcessed
+        expr: increase(batch_items_processed_total{job="batch-processing"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Нет обработанных данных"
+          description: "За последние 10 минут не было обработано ни одной записи."
+
+      # Долгое выполнение GC
+      - alert: LongGCPause
+        expr: rate(jvm_gc_pause_seconds_sum{job="batch-processing"}[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Длительная пауза GC"
+          description: "Время GC превышает 1 секунду."
+
+      # Много открытых файлов
+      - alert: HighFileDescriptors
+        expr: jvm_fd_usage{job="batch-processing"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: batch-processing
+        annotations:
+          summary: "Много открытых файловых дескрипторов"
+          description: "Использовано более 80% доступных файловых дескрипторов."

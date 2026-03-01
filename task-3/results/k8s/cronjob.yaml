@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-data-export
+  namespace: transport-analytics
+  labels:
+    app: data-export
+    type: cronjob
+  annotations:
+    description: "Daily export of transportation analytics data at 20:00"
+spec:
+  # тестов используйте: */1 * * * *
+  schedule: "*/1 * * * *"
+  
+  suspend: false
+  
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  startingDeadlineSeconds: 300
+  
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: data-export
+            job-type: scheduled
+        spec:
+          serviceAccountName: export-job-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: data-exporter
+              image: exportapp:v1.0.0
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - configMapRef:
+                    name: export-job-config
+                - secretRef:
+                    name: export-job-secrets
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+              volumeMounts:
+                - name: export-data
+                  mountPath: /tmp/export
+                - name: export-logs
+                  mountPath: /var/log/export_job
+          volumes:
+            - name: export-data
+              emptyDir:
+                sizeLimit: 2Gi
+            - name: export-logs
+              emptyDir:
+                sizeLimit: 100Mi

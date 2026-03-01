@@ -25,6 +25,22 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
+
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Для трейсинга
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    
+    // Для логирования в JSON
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+	implementation 'co.elastic.apm:elastic-apm-agent:1.52.1'
+    implementation 'co.elastic.apm:apm-agent-api:1.52.1'
+    implementation 'co.elastic.apm:apm-agent-spring-boot-starter:1.52.1'
 }
 
 test {

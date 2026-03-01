@@ -1,0 +1,17 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title TradeWare — Batch Processing (To Be)\n
+
+System_Boundary(tradeware, "TradeWare") {
+    Container(batch, "Batch Processing", "Spring Boot + Spring Batch", "ETL: CSV → PostgreSQL")
+    ContainerDb(db, "PostgreSQL", "products, loyality_data")
+}
+
+Container_Ext(gcs, "Google Cloud Storage (GCS)", "product-data.csv")
+
+Rel(batch, gcs, "Читает CSV файл")
+Rel(batch, db, "Сохряняем провалидированные данные")
+
+
+@enduml

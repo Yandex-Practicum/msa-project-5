@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: export-job-config
+  namespace: transport-analytics
+data:
+  DB_HOST: "postgres-service.transport-analytics.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "transport_db"
+  DB_USER: "postgres"
+  ASPNETCORE_ENVIRONMENT: "Docker"
+  APPLY_MIGRATIONS: "true"
+  ExportSettings__OutputDirectory: "/tmp/export"
+  ExportSettings__Delimiter: ";"
+  ExportSettings__IncludeHeader: "true"
