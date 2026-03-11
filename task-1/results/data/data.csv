@@ -1,0 +1,4 @@
+order_id,user_id,status,amount
+101,1,delivered,1500
+102,2,processing,2000
+103,3,delivered,500

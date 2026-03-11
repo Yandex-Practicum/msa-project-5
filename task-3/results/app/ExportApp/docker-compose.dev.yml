@@ -1,0 +1,58 @@
+﻿services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: transport-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: transport_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transport_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - export-net
+    restart: unless-stopped
+
+  # Сервис для сборки и запуска приложения
+  exporter:
+    build:
+      # ✅ Вариант 1: если docker-compose.dev.yml в app/ExportApp/
+      # а Dockerfile в app/ExportApp/ExportApp/Dockerfile
+      context: .
+      dockerfile: ExportApp/Dockerfile
+      
+      # ✅ Вариант 2: если docker-compose.dev.yml в app/ExportApp/
+      # и вы хотите указать контекст как подпапку:
+      # context: ./ExportApp
+      # dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_NAME=transport_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - APPLY_MIGRATIONS=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - export-net
+    restart: on-failure
+    volumes:
+      - export_logs:/tmp/logs
+
+networks:
+  export-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  export_logs:

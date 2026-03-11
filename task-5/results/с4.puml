@@ -1,0 +1,58 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title System Context diagram for Batch Processing with Monitoring
+
+Person(operator, "Оператор", "Администратор системы")
+Person(developer, "Разработчик", "Анализирует логи и метрики")
+
+System_Boundary(batch_system, "Система пакетной обработки") {
+    Container(app, "Spring Batch App", "Java 21, Spring Boot 3", "Обрабатывает CSV и обогащает данными лояльности")
+    Container(db, "PostgreSQL 15", "Database", "Хранит products и loyality_data")
+    Container(csv, "CSV File", "product-data.csv", "Исходные данные о товарах")
+}
+
+System_Boundary(monitoring, "Мониторинг и логирование") {
+    Container(prometheus, "Prometheus", "Time Series DB", "Сбор и хранение метрик")
+    Container(grafana, "Grafana", "Visualization & Alerting", "Дашборды и оповещения")
+    Container(elasticsearch, "Elasticsearch", "Search Engine", "Централизованное хранение логов")
+    Container(logstash, "Logstash", "Data Processing", "Парсинг и обогащение логов")
+    Container(kibana, "Kibana", "Visualization", "Просмотр и анализ логов")
+    Container(filebeat, "Filebeat", "Log Shipper", "Сбор логов из файлов и Docker")
+    Container(jmx_exporter, "JMX Exporter", "Metrics Collector", "Сбор JVM метрик")
+    Container(node_exporter, "Node Exporter", "System Metrics", "Метрики хоста")
+    Container(postgres_exporter, "Postgres Exporter", "DB Metrics", "Метрики PostgreSQL")
+}
+
+System_Boundary(alerting, "Оповещения") {
+    Container(telegram, "Teleram", "Канал оповещений")
+}
+
+Rel(operator, grafana, "Просмотр дашбордов и оповещений", "HTTPS")
+Rel(operator, kibana, "Просмотр логов", "HTTPS")
+Rel(developer, kibana, "Анализ ошибок", "HTTPS")
+Rel(developer, grafana, "Анализ производительности", "HTTPS")
+
+Rel(app, csv, "Читает данные", "NIO")
+Rel(app, db, "Читает/пишет данные", "JDBC")
+
+Rel(app, prometheus, "Экспортирует метрики", "HTTP /actuator/prometheus")
+Rel(jmx_exporter, app, "Собирает JVM метрики", "JMX порт 9010")
+Rel(node_exporter, app, "Метрики хоста", "Host")
+Rel(postgres_exporter, db, "Метрики БД", "SQL")
+
+Rel(prometheus, jmx_exporter, "Скрапит метрики", "HTTP /metrics")
+Rel(prometheus, node_exporter, "Скрапит метрики", "HTTP /metrics")
+Rel(prometheus, postgres_exporter, "Скрапит метрики", "HTTP /metrics")
+Rel(prometheus, app, "Скрапит метрики", "HTTP /actuator/prometheus")
+
+Rel(filebeat, app, "Читает логи", "File system /var/log/spring-batch/*.log")
+Rel(filebeat, logstash, "Отправляет логи", "Beats protocol port 5000")
+Rel(logstash, elasticsearch, "Отправляет обработанные логи", "HTTP port 9200")
+
+Rel(grafana, prometheus, "Запрашивает метрики", "PromQL")
+Rel(kibana, elasticsearch, "Запрашивает логи", "Elasticsearch DSL")
+
+Rel(grafana, telegram, "Отправляет оповещения", "Webhook")
+
+@enduml

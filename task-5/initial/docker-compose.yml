@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgresdb:
     image: postgres
@@ -70,6 +68,7 @@ services:
     restart: 'unless-stopped'
     volumes:
       - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus/alerts.yml:/etc/prometheus/alerts.yml'
     ports:
       - '9090:9090'
     healthcheck:
@@ -90,13 +89,32 @@ services:
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "3000" ]
 
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/config.yml:/etc/alertmanager/config.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
     image: batch-processing
+    container_name: app
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    restart: always
+    ports:
+      - '8080:8080'
+
+volumes:
+  alertmanager_data:

@@ -1,0 +1,49 @@
+PS C:\Practicum\microservice-architecture\sprint5\msa-project-5\task-5\initial> docker-compose up --build -d
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+[+] Building 2.6s (20/20) FINISHED                                                                                                                                       docker:desktop-linux
+ => [filebeat internal] load build definition from Dockerfile                                                                                                                            0.0s
+ => => transferring dockerfile: 373B                                                                                                                                                     0.0s 
+ => [filebeat internal] load metadata for docker.elastic.co/beats/filebeat:7.17.28                                                                                                       1.3s 
+ => [filebeat internal] load .dockerignore                                                                                                                                               0.0s
+ => => transferring context: 2B                                                                                                                                                          0.0s 
+ => [filebeat internal] load build context                                                                                                                                               0.0s 
+ => => transferring context: 34B                                                                                                                                                         0.0s 
+ => [filebeat 1/5] FROM docker.elastic.co/beats/filebeat:7.17.28@sha256:a3bf5b2e3b1de412b28e2897ecbd07aa3070f8204048ac89e107c6593eac031c                                                 0.0s 
+ => CACHED [filebeat 2/5] COPY filebeat.yml /usr/share/filebeat/filebeat.yml                                                                                                             0.0s 
+ => CACHED [filebeat 3/5] RUN mkdir /usr/share/filebeat/dockerlogs                                                                                                                       0.0s 
+ => CACHED [filebeat 4/5] RUN chown -R root /usr/share/filebeat/                                                                                                                         0.0s 
+ => CACHED [filebeat 5/5] RUN chmod -R go-w /usr/share/filebeat/                                                                                                                         0.0s 
+ => [filebeat] exporting to image                                                                                                                                                        0.0s 
+ => => exporting layers                                                                                                                                                                  0.0s 
+ => => writing image sha256:0de152c500b4efa27c8cffae0013607d79759696c2ff79edfaba99c1c98cdd6d                                                                                             0.0s 
+ => => naming to docker.io/library/initial-filebeat                                                                                                                                      0.0s 
+ => [filebeat] resolving provenance for metadata file                                                                                                                                    0.0s 
+ => [app internal] load build definition from Dockerfile                                                                                                                                 0.0s
+ => => transferring dockerfile: 164B                                                                                                                                                     0.0s 
+ => [app internal] load metadata for docker.io/library/amazoncorretto:21-alpine                                                                                                          0.6s 
+ => [app internal] load .dockerignore                                                                                                                                                    0.0s 
+ => => transferring context: 2B                                                                                                                                                          0.0s 
+ => [app 1/3] FROM docker.io/library/amazoncorretto:21-alpine@sha256:c64034bdceaff59b33bc366b9ab1b7fc5593d8155daf82cd978541b206555d1f                                                    0.0s 
+ => [app internal] load build context                                                                                                                                                    0.0s 
+ => => transferring context: 197B                                                                                                                                                        0.0s 
+ => CACHED [app 2/3] WORKDIR /app                                                                                                                                                        0.0s 
+ => CACHED [app 3/3] COPY build/libs/*.jar app.jar                                                                                                                                       0.0s 
+ => [app] exporting to image                                                                                                                                                             0.0s 
+ => => exporting layers                                                                                                                                                                  0.0s 
+ => => writing image sha256:cfe026233a619d77417d578b8135ada6a52b2ea7a9f765d58c964befe01d9dde                                                                                             0.0s 
+ => => naming to docker.io/library/batch-processing                                                                                                                                      0.0s 
+ => [app] resolving provenance for metadata file                                                                                                                                         0.0s 
+[+] Running 12/12
+ ✔ app                             Built                                                                                                                                                 0.0s 
+ ✔ filebeat                        Built                                                                                                                                                 0.0s 
+ ✔ Network initial_default         Created                                                                                                                                               0.1s 
+ ✔ Container prometheus            Started                                                                                                                                               2.6s 
+ ✔ Container elasticsearch         Started                                                                                                                                               2.0s 
+ ✔ Container alertmanager          Started                                                                                                                                               2.3s 
+ ✔ Container initial-postgresdb-1  Started                                                                                                                                               1.7s 
+ ✔ Container logstash              Started                                                                                                                                               2.8s 
+ ✔ Container kibana                Started                                                                                                                                               3.0s 
+ ✔ Container grafana               Started                                                                                                                                               3.7s 
+ ✔ Container filebeat              Started                                                                                                                                               3.9s 
+ ✔ Container app                   Started                       

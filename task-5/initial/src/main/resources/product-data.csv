@@ -1,3 +1,4 @@
+product_id,product_sku,product_name,product_amount,product_data
 1,20001,hammer,45,Loyality_off
 2,30001,sink,20,Loyality_off
 3,40001,roof_shell,256,Loyality_on

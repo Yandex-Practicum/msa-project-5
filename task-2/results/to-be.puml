@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Система сгенерации кастомных CSV/XLS-прайс-листов (C2)
+
+System_Boundary(system, "Граница системы") {
+    ContainerDb(db, "БД прайс-листов", "Postgres", "Актуальные данные о ценах на товары")
+    Container(cron_job, "CronJob", "k8_pod", "Крон джоба для генерации CSV/XLS-прайс-листов")
+    Container(s3, "File storage", "s3", "Хранилище файлов")
+    Container(prometheus, "Метрики", "prometheus", "Пишем метрики работы джобы")
+    Container(grafana, "Дашборды и алерты", "grafana", "Визуализируем метрники и создаем алерты")
+}
+
+System_Ext(b2b_client, "Внешние системы", "Download via API/Email/FTP")
+System_Ext(email, "Внешние системы", "Email,Telegram")
+
+Rel(db, cron_job, "Берем данные из базы")
+Rel(cron_job, s3, "Сохраняем файлы")
+Rel(cron_job, prometheus, "Пишем метрики")
+Rel(prometheus, grafana, "Данные для визуализации и алертов")
+Rel(grafana, email, "Уведомление о алертах")
+Rel(s3, b2b_client, "Клиент может обращаться к сгенерированным файлам")
+
+
+@enduml
