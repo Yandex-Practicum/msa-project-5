@@ -1,0 +1,70 @@
+# PostgreSQL для демо: Service с именем postgres (DNS внутри кластера)
+# Учётные данные совпадают с secret-example.yaml (db-secret)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  01-init.sql: |
+    CREATE TABLE IF NOT EXISTS shipments (
+      id SERIAL PRIMARY KEY,
+      ref VARCHAR(64) NOT NULL
+    );
+    INSERT INTO shipments (ref) VALUES ('demo-1'), ('demo-2');
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+            - name: POSTGRES_DB
+              value: demo
+          volumeMounts:
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "demo", "-d", "demo"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: initdb
+          configMap:
+            name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

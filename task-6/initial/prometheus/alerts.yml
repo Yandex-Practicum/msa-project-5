@@ -1,0 +1,10 @@
+groups:
+  - name: batch
+    rules:
+      - alert: BatchJobHighJvmMemory
+        expr: jvm_memory_used_bytes{area="heap"} > 4e8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование heap JVM приложением batch"

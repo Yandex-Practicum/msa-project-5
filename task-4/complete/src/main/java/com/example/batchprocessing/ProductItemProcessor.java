@@ -5,11 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.DataClassRowMapper;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class ProductItemProcessor implements ItemProcessor<Product, Product> {
@@ -19,7 +17,7 @@ public class ProductItemProcessor implements ItemProcessor<Product, Product> {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-    @Override
+	@Override
 	public Product process(final Product product) {
 		final Long productId = product.productId();
 		final Long productSku = product.productSku();
@@ -27,20 +25,17 @@ public class ProductItemProcessor implements ItemProcessor<Product, Product> {
 		final Long productAmount = product.productAmount();
 		final String productData = product.productData();
 
-		AtomicReference<Product> transformedProduct = new AtomicReference<>(new Product(productId, productSku, productName, productAmount, productData));
+		String loyalityData = productData;
+		try {
+			String sql = "SELECT loyalityData FROM loyality_data WHERE productSku = ?";
+			loyalityData = jdbcTemplate.queryForObject(sql, String.class, productSku);
+		} catch (EmptyResultDataAccessException ex) {
+			log.debug("Нет строки лояльности для sku={}, оставляем productData", productSku);
+		}
 
-		String sql = "SELECT * FROM loyality_data WHERE productSku=" + productSku ;
-		jdbcTemplate.query(sql, new DataClassRowMapper<>(Loyality.class))
-				.stream().findAny().map(Loyality::loyalityData).map(loyalityData -> {
-                    return new Product(productId, productSku, productName, productAmount, loyalityData);
-				}).map( p -> {
-					transformedProduct.set(p);
-                    return null;
-                });
-
-		log.info("Transforming ({}) into ({})", product, transformedProduct.get());
-
-		return transformedProduct.get();
+		Product out = new Product(productId, productSku, productName, productAmount, loyalityData);
+		log.info("Transforming ({}) into ({})", product, out);
+		return out;
 	}
 
 }
