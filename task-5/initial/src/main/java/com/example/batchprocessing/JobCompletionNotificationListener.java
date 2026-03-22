@@ -22,9 +22,19 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
 	}
 
 	@Override
+	public void beforeJob(JobExecution jobExecution) {
+		jdbcTemplate.update("DELETE FROM products");
+		log.info("Очищена таблица products перед повторным запуском job");
+	}
+
+	@Override
 	public void afterJob(JobExecution jobExecution) {
 		if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-			// todo
+			log.info("!!! JOB FINISHED! Time to verify the results");
+
+			jdbcTemplate
+					.query("SELECT productId, productSku, productName, productAmount, productData FROM products", new DataClassRowMapper<>(Product.class))
+					.forEach(person -> log.info("Transformed <{}> in the database.", person));
 		}
 	}
 }

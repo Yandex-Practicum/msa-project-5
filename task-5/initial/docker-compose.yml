@@ -70,6 +70,10 @@ services:
     restart: 'unless-stopped'
     volumes:
       - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus/alerts.yml:/etc/prometheus/alerts.yml'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
     ports:
       - '9090:9090'
     healthcheck:
@@ -93,10 +97,10 @@ services:
   app:
     depends_on:
       - postgresdb
-      - filebeat1
-      - grafana
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
-    restart: no
+    ports:
+      - '8080:8080'
+    restart: "no"

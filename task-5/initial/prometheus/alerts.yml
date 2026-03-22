@@ -1,0 +1,10 @@
+groups:
+  - name: batch
+    rules:
+      - alert: BatchAppScrapeDown
+        expr: up{job="batch-processing"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus не получает метрики с batch-processing"

@@ -1,0 +1,73 @@
+PS C:\msa\sprint5\msa-project-5\task-4\complete>  docker-compose up 
+time="2026-03-22T14:27:14+03:00" level=warning msg="C:\\msa\\sprint5\\msa-project-5\\task-4\\complete\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+Attaching to app-1, postgresdb-1
+postgresdb-1  | 
+postgresdb-1  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+postgresdb-1  | 
+postgresdb-1  | 2026-03-22 11:27:13.163 UTC [1] LOG:  starting PostgreSQL 18.3 (Debian 18.3-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+postgresdb-1  | 2026-03-22 11:27:13.164 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgresdb-1  | 2026-03-22 11:27:13.164 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgresdb-1  | 2026-03-22 11:27:13.181 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgresdb-1  | 2026-03-22 11:27:13.214 UTC [32] LOG:  database system was shut down at 2026-03-22 11:27:07 UTC
+postgresdb-1  | 2026-03-22 11:27:13.229 UTC [1] LOG:  database system is ready to accept connections
+app-1         | 
+app-1         |   .   ____          _            __ _ _
+app-1         |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+app-1         | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+app-1         |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+app-1         |   '  |____| .__|_| |_|_| |_\__, | / / / /
+app-1         |  =========|_|==============|___/=/_/_/_/
+app-1         | 
+app-1         |  :: Spring Boot ::                (v3.5.3)
+app-1         | 
+app-1         | 2026-03-22T11:27:14.950Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 1 (/app/app.jar started by root in /app)
+app-1         | 2026-03-22T11:27:14.955Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : No active profile set, falling back to 1 default profile: "default"
+app-1         | 2026-03-22T11:27:16.170Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+app-1         | 2026-03-22T11:27:16.475Z  INFO 1 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1f6d27cc
+app-1         | 2026-03-22T11:27:16.478Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+postgresdb-1  | 2026-03-22 11:27:16.543 UTC [36] ERROR:  relation "batch_job_instance" already exists
+postgresdb-1  | 2026-03-22 11:27:16.543 UTC [36] STATEMENT:  CREATE TABLE BATCH_JOB_INSTANCE ( JOB_INSTANCE_ID BIGINT NOT NULL PRIMARY KEY , VERSION BIGINT , JOB_NAME VARCHAR(100) NOT NULL, JOB_KEY VARCHAR(32) NOT NULL, constraint JOB_INST_UN unique (JOB_NAME, JOB_KEY) ) 
+postgresdb-1  | 2026-03-22 11:27:16.548 UTC [36] ERROR:  relation "batch_job_execution" already exists
+postgresdb-1  | 2026-03-22 11:27:16.548 UTC [36] STATEMENT:  CREATE TABLE BATCH_JOB_EXECUTION ( JOB_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY , VERSION BIGINT , JOB_INSTANCE_ID BIGINT NOT NULL, CREATE_TIME TIMESTAMP NOT NULL, START_TIME TIMESTAMP DEFAULT NULL , END_TIME TIMESTAMP DEFAULT NULL , STATUS VARCHAR(10) , EXIT_CODE VARCHAR(2500) , EXIT_MESSAGE VARCHAR(2500) , LAST_UPDATED TIMESTAMP, constraint JOB_INST_EXEC_FK foreign key (JOB_INSTANCE_ID) references BATCH_JOB_INSTANCE(JOB_INSTANCE_ID) ) 
+postgresdb-1  | 2026-03-22 11:27:16.549 UTC [36] ERROR:  relation "batch_job_execution_params" already exists
+postgresdb-1  | 2026-03-22 11:27:16.549 UTC [36] STATEMENT:  CREATE TABLE BATCH_JOB_EXECUTION_PARAMS ( JOB_EXECUTION_ID BIGINT NOT NULL , PARAMETER_NAME VARCHAR(100) NOT NULL , PARAMETER_TYPE VARCHAR(100) NOT NULL , PARAMETER_VALUE VARCHAR(2500) , IDENTIFYING CHAR(1) NOT NULL , constraint JOB_EXEC_PARAMS_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID) ) 
+postgresdb-1  | 2026-03-22 11:27:16.550 UTC [36] ERROR:  relation "batch_step_execution" already exists
+postgresdb-1  | 2026-03-22 11:27:16.550 UTC [36] STATEMENT:  CREATE TABLE BATCH_STEP_EXECUTION ( STEP_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY , VERSION BIGINT NOT NULL, STEP_NAME VARCHAR(100) NOT NULL, JOB_EXECUTION_ID BIGINT NOT NULL, CREATE_TIME TIMESTAMP NOT NULL, START_TIME TIMESTAMP DEFAULT NULL , END_TIME TIMESTAMP DEFAULT NULL , STATUS VARCHAR(10) , COMMIT_COUNT BIGINT , READ_COUNT BIGINT , FILTER_COUNT BIGINT , WRITE_COUNT BIGINT , READ_SKIP_COUNT BIGINT , WRITE_SKIP_COUNT BIGINT , PROCESS_SKIP_COUNT BIGINT , ROLLBACK_COUNT BIGINT , EXIT_CODE VARCHAR(2500) , EXIT_MESSAGE VARCHAR(2500) , LAST_UPDATED TIMESTAMP, constraint JOB_EXEC_STEP_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID) ) 
+postgresdb-1  | 2026-03-22 11:27:16.551 UTC [36] ERROR:  relation "batch_step_execution_context" already exists
+postgresdb-1  | 2026-03-22 11:27:16.551 UTC [36] STATEMENT:  CREATE TABLE BATCH_STEP_EXECUTION_CONTEXT ( STEP_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY, SHORT_CONTEXT VARCHAR(2500) NOT NULL, SERIALIZED_CONTEXT TEXT , constraint STEP_EXEC_CTX_FK foreign key (STEP_EXECUTION_ID) references BATCH_STEP_EXECUTION(STEP_EXECUTION_ID) ) 
+postgresdb-1  | 2026-03-22 11:27:16.552 UTC [36] ERROR:  relation "batch_job_execution_context" already exists
+postgresdb-1  | 2026-03-22 11:27:16.552 UTC [36] STATEMENT:  CREATE TABLE BATCH_JOB_EXECUTION_CONTEXT ( JOB_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY, SHORT_CONTEXT VARCHAR(2500) NOT NULL, SERIALIZED_CONTEXT TEXT , constraint JOB_EXEC_CTX_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID) ) 
+postgresdb-1  | 2026-03-22 11:27:16.553 UTC [36] ERROR:  relation "batch_step_execution_seq" already exists
+postgresdb-1  | 2026-03-22 11:27:16.553 UTC [36] STATEMENT:  CREATE SEQUENCE BATCH_STEP_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE
+postgresdb-1  | 2026-03-22 11:27:16.554 UTC [36] ERROR:  relation "batch_job_execution_seq" already exists
+postgresdb-1  | 2026-03-22 11:27:16.554 UTC [36] STATEMENT:  CREATE SEQUENCE BATCH_JOB_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE
+postgresdb-1  | 2026-03-22 11:27:16.555 UTC [36] ERROR:  relation "batch_job_seq" already exists
+postgresdb-1  | 2026-03-22 11:27:16.555 UTC [36] STATEMENT:  CREATE SEQUENCE BATCH_JOB_SEQ MAXVALUE 9223372036854775807 NO CYCLE
+app-1         | 2026-03-22T11:27:17.072Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Started BatchProcessingApplication in 2.924 seconds (process running for 3.629)
+app-1         | 2026-03-22T11:27:17.081Z  INFO 1 --- [           main] o.s.b.a.b.JobLauncherApplicationRunner   : Running default command line with: []
+app-1         | 2026-03-22T11:27:17.203Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] launched with the following parameters: [{}]
+app-1         | 2026-03-22T11:27:17.232Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Очищена таблица products перед повторным запуском job
+app-1         | 2026-03-22T11:27:17.245Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [step1]
+app-1         | 2026-03-22T11:27:17.285Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]) into (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off])
+app-1         | 2026-03-22T11:27:17.303Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]) into (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off])
+app-1         | 2026-03-22T11:27:17.305Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]) into (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on])
+app-1         | 2026-03-22T11:27:17.334Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]) into (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off])
+app-1         | 2026-03-22T11:27:17.335Z  INFO 1 --- [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]) into (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on])
+app-1         | 2026-03-22T11:27:17.349Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [step1] executed in 102ms
+app-1         | 2026-03-22T11:27:17.367Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : !!! JOB FINISHED! Time to verify the results
+app-1         | 2026-03-22T11:27:17.373Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Transformed <Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]> in the database.
+app-1         | 2026-03-22T11:27:17.374Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Transformed <Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]> in the database.
+app-1         | 2026-03-22T11:27:17.374Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Transformed <Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]> in the database.
+app-1         | 2026-03-22T11:27:17.374Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Transformed <Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]> in the database.
+app-1         | 2026-03-22T11:27:17.374Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : Transformed <Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]> in the database.
+app-1         | 2026-03-22T11:27:17.395Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] completed with the following parameters: [{}] and the following status: [COMPLETED] in 146ms
+app-1         | 2026-03-22T11:27:17.409Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+app-1         | 2026-03-22T11:27:17.427Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+app-1 exited with code 0
+postgresdb-1  | 2026-03-22 11:32:24.019 UTC [30] LOG:  checkpoint starting: time
+postgresdb-1  | 2026-03-22 11:32:25.866 UTC [30] LOG:  checkpoint complete: wrote 18 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.811 s, sync=0.021 s, total=1.848 s; sync files=17, longest=0.005 s, average=0.002 s; distance=15 kB, estimate=15 kB; lsn=0/1C85CF0, redo lsn=0/1C85C98
+Gracefully Stopping... press Ctrl+C again to force
+ Container complete-app-1  Stopping
+ Container complete-app-1  Stopped
+ Container complete-postgresdb-1  Stopping
+ Container complete-postgresdb-1  Stopped

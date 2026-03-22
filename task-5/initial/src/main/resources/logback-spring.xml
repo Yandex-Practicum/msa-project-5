@@ -56,7 +56,7 @@
     <springProfile name="non-json-logs">
         <include resource="org/springframework/boot/logging/logback/base.xml"/>
     </springProfile>
-    <logger name="batch-processing" level="DEBUG" additivity="false">
+    <logger name="com.example.batchprocessing" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
     <root level="INFO">
