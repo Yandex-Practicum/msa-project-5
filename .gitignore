@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres-db-volume/
+tradeware-db-volume/
+
+# Airflow
+airflow-logs/
+logs/
+
+# Environment
+.env
+*.env.local
