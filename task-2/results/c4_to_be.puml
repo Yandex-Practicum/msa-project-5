@@ -1,0 +1,26 @@
+@startuml c4_to_be
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Container: To Be — Генерация прайс-листов для B2B-клиентов
+
+Boundary(k8s, "Kubernetes Cluster") {
+
+    System(cronjob, "CronJob: price-list-generator", "schedule: 0 6 * * * Python-скрипт в контейнере. Запускается ежедневно, выполняет JOIN 4 таблиц и генерирует CSV.")
+
+    ContainerDb(db, "БД прайс-листов", "PostgreSQL", "products, categories, clients, client_prices")
+
+    Container(storage, "Файловое хранилище", "PVC / S3 / GCS", "Сгенерированные CSV-файлы прайс-листов по клиентам")
+
+    Container(monitoring, "Мониторинг", "Prometheus + Grafana", "Метрики CronJob, алерты при сбоях генерации")
+
+    Container(services, "Микросервисы магазина", "K8s Deployments", "Читают сгенерированные CSV-файлы прайс-листов")
+}
+
+Rel(cronjob, db, "SQL JOIN")
+Rel(cronjob, storage, "Записывает CSV-файлы")
+Rel(services, storage, "Читает CSV-файлы")
+Rel(monitoring, cronjob, "Собирает метрики", "kube-state-metrics")
+
+SHOW_LEGEND()
+@enduml
