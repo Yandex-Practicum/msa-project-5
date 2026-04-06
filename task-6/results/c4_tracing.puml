@@ -1,0 +1,40 @@
+@startuml c4_tracing
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Container: Архитектура трейсинга Spring Batch
+
+System_Boundary(infra, "Docker Compose") {
+
+    Container(client, "ETL Client", "Python 3.12", "Вызывает API запуска Job B3 Propagation (traceId, spanId)")
+
+    Container(app, "Spring Batch ETL", "Spring Boot / Java 17", "REST API: POST /api/jobs/import-products Micrometer Tracing + Brave JSON-логи (Logback)")
+
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL 15", "productsdb products, loyality_data")
+
+    Container(zipkin, "Zipkin", "v3", "Сбор и визуализация распределенных трейсов")
+
+    System_Boundary(logging, "Логирование (ELK)") {
+        Container(filebeat, "Filebeat", "v7.17", "Сбор Docker-логов из контейнеров")
+        Container(logstash, "Logstash", "v7.17", "Парсинг и маршрутизация логов")
+        Container(elasticsearch, "Elasticsearch", "v7.17", "Хранение и индексация логов")
+        Container(kibana, "Kibana", "v7.17", "UI для поиска логов по traceId, spanId")
+    }
+
+    System_Boundary(monitoring, "Мониторинг") {
+        Container(prometheus, "Prometheus", "v3.4.0", "Сбор метрик Alert Rules")
+        Container(grafana, "Grafana", "v12.0.1", "Дашборды метрик")
+    }
+}
+
+Rel(client, app, "POST /api/jobs/import-products", "HTTP + B3 header (traceId-spanId-1)")
+Rel(app, postgres, "JDBC")
+Rel(app, zipkin, "Экспорт spans", "HTTP /api/v2/spans")
+Rel(prometheus, app, "Scrape метрик", "HTTP /actuator/prometheus")
+Rel(grafana, prometheus, "Запрос метрик", "PromQL")
+Rel(filebeat, logstash, "Отправка логов", "Beats protocol")
+Rel(logstash, elasticsearch, "Индексация", "HTTP")
+Rel(kibana, elasticsearch, "Запрос логов", "HTTP")
+Rel_L(filebeat, app, "Чтение Docker-логов", "Docker socket")
+
+SHOW_LEGEND()
+@enduml
