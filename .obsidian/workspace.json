@@ -1,0 +1,229 @@
+{
+  "main": {
+    "id": "e3949785be6d65fd",
+    "type": "split",
+    "children": [
+      {
+        "id": "b8ed8e5ecffc9f0d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "705cf21d3d4ed80f",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Новая вкладка"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "718d4976c41b79e6",
+    "type": "split",
+    "children": [
+      {
+        "id": "1e0b192db481fb38",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e7b24239140f6341",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "88952518b2a21efe",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "23e7034c3367ed53",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "f69b2d911558ea60",
+    "type": "split",
+    "children": [
+      {
+        "id": "08159419e211d21e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3ea390d2c58798ca",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "task-2/results/README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки для README"
+            }
+          },
+          {
+            "id": "47ee7aec9c008aa2",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "task-2/results/README.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки из README"
+            }
+          },
+          {
+            "id": "c48209e71fd2a710",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "b6958a50734901e8",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "dd22ac3448ea41af",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "task-2/results/README.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура README"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "705cf21d3d4ed80f",
+  "lastOpenFiles": [
+    "task-6/results/result.png",
+    "task-6/results/support/settings.gradle",
+    "task-6/results/img.png",
+    "task-6/results/img_1.png",
+    "task-6/results/support/src-test/java/com/example/batchprocessing/ProductItemProcessorTest.java",
+    "task-6/results/support/src-test/java/com/example/batchprocessing",
+    "task-6/results/support/src-test/java/com/example",
+    "task-6/results/support/src-test/java/com",
+    "task-6/results/support/src-test/java",
+    "task-6/results/support/src-test",
+    "task-6/pom.xml",
+    "task-6/src/main/resources/application.yml",
+    "task-6/results/support/client/trigger_batch.py",
+    "task-6/results/kibana.png",
+    "task-6/results/grafana-login.png",
+    "task-6/README.md",
+    "task-5/results/ADR.md",
+    "task-5/results/kibana.png",
+    "task-5/results/image.png",
+    "task-5/results/prometheus.png",
+    "task-5/results/grafana.png",
+    "task-5/results/1.png",
+    "task-5/results/LOGGING_AND_ALERTING.md",
+    "task-5/results/METRICS.md",
+    "_tmp_kozhanov_repo/task-5/results/grafana.png",
+    "_tmp_kozhanov_repo/task-3/results/README.md",
+    "_tmp_kozhanov_repo/task-1/results/README.md",
+    "_tmp_kozhanov_repo/task-6/results/README.md",
+    "_tmp_kozhanov_repo/task-5/results/README.md",
+    "_tmp_kozhanov_repo/task-5/README.md",
+    "_tmp_kozhanov_repo/task-4/results/README.md",
+    "_tmp_kozhanov_repo/task-4/README.md",
+    "task-5/README_first.md",
+    "task-4/ADR.md",
+    "task-4/results/ADR.md",
+    "task-4/results/README.md",
+    "task-4/README.md",
+    "task-4/README_first.md",
+    "task-2/results/README.md",
+    "task-2/results/implementation-plan.md",
+    "task-2/implementation-plan.md",
+    "task-2/README.md",
+    "task-1/results/README.md",
+    "task-1/README.md"
+  ]
+}

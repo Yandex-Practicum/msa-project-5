@@ -1,0 +1,5 @@
+order_id,delivery_status,carrier
+ORD-1001,delivered,dhl
+ORD-1002,delayed,ups
+ORD-1003,failed,dhl
+ORD-1004,delivered,dpd

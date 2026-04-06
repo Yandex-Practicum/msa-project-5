@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: analytics-postgres-secret
+  namespace: task3-analytics
+type: Opaque
+stringData:
+  POSTGRES_DB: analytics
+  POSTGRES_USER: analytics
+  POSTGRES_PASSWORD: analytics_pass
+  DB_USER: analytics
+  DB_PASSWORD: analytics_pass
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: analytics-postgres-data
+  namespace: task3-analytics
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-postgres-init
+  namespace: task3-analytics
+data:
+  01_init.sql: |
+    CREATE TABLE IF NOT EXISTS shipments (
+        id BIGSERIAL PRIMARY KEY,
+        tracking_number TEXT NOT NULL UNIQUE,
+        client_id BIGINT NOT NULL,
+        driver_name TEXT NOT NULL,
+        vehicle_plate TEXT NOT NULL,
+        origin_city TEXT NOT NULL,
+        destination_city TEXT NOT NULL,
+        status TEXT NOT NULL,
+        planned_pickup_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_shipments_created_at ON shipments (created_at);
+
+    INSERT INTO shipments (
+        tracking_number,
+        client_id,
+        driver_name,
+        vehicle_plate,
+        origin_city,
+        destination_city,
+        status,
+        planned_pickup_at,
+        created_at
+    )
+    VALUES
+        (
+            'SHP-1001',
+            101,
+            'Ivan Petrov',
+            'A123BC77',
+            'Moscow',
+            'Tver',
+            'created',
+            date_trunc('day', NOW()) + interval '08 hours',
+            date_trunc('day', NOW()) + interval '07 hours 30 minutes'
+        ),
+        (
+            'SHP-1002',
+            102,
+            'Pavel Smirnov',
+            'B234CD77',
+            'Moscow',
+            'Yaroslavl',
+            'in_transit',
+            date_trunc('day', NOW()) + interval '10 hours',
+            date_trunc('day', NOW()) + interval '09 hours 10 minutes'
+        ),
+        (
+            'SHP-1003',
+            103,
+            'Oleg Sidorov',
+            'C345DE77',
+            'Saint Petersburg',
+            'Veliky Novgorod',
+            'delivered',
+            date_trunc('day', NOW()) + interval '06 hours',
+            date_trunc('day', NOW()) + interval '05 hours 20 minutes'
+        ),
+        (
+            'SHP-0999',
+            99,
+            'Archive Driver',
+            'Z999ZZ77',
+            'Kazan',
+            'Samara',
+            'delivered',
+            date_trunc('day', NOW() - interval '1 day') + interval '11 hours',
+            date_trunc('day', NOW() - interval '1 day') + interval '10 hours 45 minutes'
+        )
+    ON CONFLICT (tracking_number) DO NOTHING;

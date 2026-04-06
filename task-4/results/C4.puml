@@ -1,0 +1,20 @@
+@startuml Task4 Spring Batch ETL C4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(engineer, "Инженер / разработчик", "Запускает POC, смотрит логи и проверяет итоговые данные")
+System_Ext(productsCsv, "Файл product-data.csv", "Исходные данные по товарам")
+System_Ext(loyaltyCsv, "Файл loyality_data.csv", "Справочник программы лояльности")
+System_Ext(cloudScheduler, "Cloud scheduler", "CronJob / CI pipeline / manual trigger")
+
+System_Boundary(task4, "Task 4 ETL solution") {
+    System(batchSystem, "Spring Batch ETL POC", "Загружает loyalty-данные, обогащает товары и сохраняет результат в PostgreSQL")
+}
+
+SystemDb(postgres, "PostgreSQL", "Хранит products, loyality_data и BATCH_*")
+
+Rel(engineer, batchSystem, "Запускает и анализирует результат")
+Rel(productsCsv, batchSystem, "Передаёт CSV товаров")
+Rel(loyaltyCsv, batchSystem, "Передаёт CSV лояльности")
+Rel(cloudScheduler, batchSystem, "Может запускать job по расписанию")
+Rel(batchSystem, postgres, "Читает и записывает данные")
+Rel(engineer, postgres, "Проверяет итоговые записи")

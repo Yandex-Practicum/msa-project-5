@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.batchprocessing.ProductItemProcessorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-04-06T11:50:14" hostname="ROF1L" time="0.072">
+  <properties/>
+  <testcase name="shouldReplaceProductDataWhenLoyaltyEntryExists()" classname="com.example.batchprocessing.ProductItemProcessorTest" time="0.067"/>
+  <testcase name="shouldKeepOriginalProductDataWhenLoyaltyEntryIsMissing()" classname="com.example.batchprocessing.ProductItemProcessorTest" time="0.004"/>
+  <system-out><![CDATA[14:50:14.703 [Test worker] INFO com.example.batchprocessing.ProductItemProcessor -- Transforming (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]) into (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_on])
+14:50:14.725 [Test worker] INFO com.example.batchprocessing.ProductItemProcessor -- Transforming (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]) into (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on])
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,4 @@
+airflow/logs/
+airflow/output/*.json
+!airflow/output/.gitkeep
+.env

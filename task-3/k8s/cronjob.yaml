@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipment-exporter
+spec:
+  schedule: "0 20 * * *"
+  timeZone: Europe/Moscow
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: exporter
+              image: shipment-exporter:local
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - configMapRef:
+                    name: shipment-exporter-config
+                - secretRef:
+                    name: analytics-postgres-secret
+              volumeMounts:
+                - name: export-data
+                  mountPath: /exports
+          volumes:
+            - name: export-data
+              persistentVolumeClaim:
+                claimName: analytics-export-data

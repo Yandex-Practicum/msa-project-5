@@ -1,0 +1,34 @@
+startDelaySeconds: 0
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobDurationMillis'
+    name: batch_job_last_duration_millis
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobReadCount'
+    name: batch_job_last_read_count
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobWriteCount'
+    name: batch_job_last_write_count
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobSkipCount'
+    name: batch_job_last_skip_count
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobStatusCode'
+    name: batch_job_last_status_code
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobExecutionId'
+    name: batch_job_last_execution_id
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobStartEpochMillis'
+    name: batch_job_last_start_epoch_millis
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastJobEndEpochMillis'
+    name: batch_job_last_end_epoch_millis
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastSuccessfulJobEpochMillis'
+    name: batch_job_last_success_epoch_millis
+    type: GAUGE
+  - pattern: 'com.example.batchprocessing<type=BatchJobMetrics><>LastFailedJobEpochMillis'
+    name: batch_job_last_failure_epoch_millis
+    type: GAUGE

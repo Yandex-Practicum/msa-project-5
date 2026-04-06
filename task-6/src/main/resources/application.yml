@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: batch-processing
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:productsdb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-all.sql
+  batch:
+    jdbc:
+      initialize-schema: always
+      table-prefix: BATCH_
+    job:
+      enabled: false
+  jmx:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  health:
+    probes:
+      enabled: true
+
+logging:
+  file:
+    path: ${LOG_PATH:./logs}
+
+app:
+  input:
+    loyalty-file: ${LOYALTY_FILE:data/loyality_data.csv}
+    product-file: ${PRODUCT_FILE:data/product-data.csv}

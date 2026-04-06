@@ -1,0 +1,22 @@
+@startuml Архитектура выгрузки B2B прайс-листов
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+System_Ext(observability, "Мониторинг и логирование", "Prometheus, Grafana, централизованные логи и алерты")
+
+System_Boundary(store, "Контур интернет-магазина") {
+
+    System_Boundary(k8s, "Kubernetes") {
+        Container(cronjob, "Kubernetes CronJob", "Kubernetes", "Запускает ежедневную выгрузку в 06:00")
+        Container(exporter, "Exporter", "Container", "Читает данные из PostgreSQL и формирует CSV/XLSX прайс-листы")
+    }
+
+    ContainerDb(postgres, "БД прайс-листов")
+    ContainerDb(storage, "Объектное хранилище прайс-листов", "S3/MinIO", "Хранит готовые CSV/XLSX файлы")
+}
+
+Rel(cronjob, exporter, "Запускает job по расписанию")
+Rel(exporter, postgres, "Читает данные по read-only соединению")
+Rel(exporter, storage, "Публикует готовые файлы")
+Rel(exporter, observability, "Отправляет логи, метрики и статусы")
+
+@enduml

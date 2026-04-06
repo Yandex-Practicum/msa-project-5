@@ -1,0 +1,33 @@
+@startuml Task5 Observability C4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(engineer, "Инженер / разработчик", "Запускает POC, смотрит метрики, логи и статусы алертов")
+System_Ext(productsCsv, "Файл product-data.csv", "Исходные данные по товарам")
+System_Ext(loyaltyCsv, "Файл loyality_data.csv", "Справочник лояльности")
+
+System_Boundary(task5, "Task 5 monitoring and logging POC") {
+    Container(batchApp, "Spring Batch application", "Spring Boot + Spring Batch", "Импортирует CSV, пишет данные в PostgreSQL, публикует JMX-метрики и структурированные JSON-логи")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Хранит products, loyality_data и таблицы Spring Batch")
+    Container(prometheus, "Prometheus", "Prometheus", "Собирает метрики с JMX Exporter и вычисляет alert rules")
+    Container(grafana, "Grafana", "Grafana", "Показывает dashboard по batch-метрикам")
+    Container(filebeat, "Filebeat", "Filebeat", "Читает JSON-логи приложения из общего volume")
+    Container(logstash, "Logstash", "Logstash", "Принимает события от Filebeat и пишет их в Elasticsearch")
+    ContainerDb(elasticsearch, "Elasticsearch", "Elasticsearch", "Хранит централизованные логи")
+    Container(kibana, "Kibana", "Kibana", "Показывает и фильтрует логи")
+}
+
+Rel(engineer, batchApp, "Запускает job и проверяет статус")
+Rel(productsCsv, batchApp, "Передаёт CSV товаров")
+Rel(loyaltyCsv, batchApp, "Передаёт CSV лояльности")
+Rel(batchApp, postgres, "Читает и записывает данные")
+Rel(batchApp, prometheus, "Экспортирует JMX-метрики через javaagent", "HTTP /metrics on :9404")
+Rel(prometheus, grafana, "Источник метрик для dashboard")
+Rel(batchApp, filebeat, "Пишет JSON-логи в общий volume")
+Rel(filebeat, logstash, "Отправляет логи по Beats")
+Rel(logstash, elasticsearch, "Индексирует логи")
+Rel(kibana, elasticsearch, "Читает логи")
+Rel(engineer, grafana, "Смотрит метрики и алерты")
+Rel(engineer, kibana, "Анализирует логи и ошибки")
+Rel(engineer, prometheus, "Проверяет состояние alert rules")
+
+@enduml

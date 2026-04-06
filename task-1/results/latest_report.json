@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-04-03T17:57:59.759600Z",
+  "total_orders": 5,
+  "paid_orders": 4,
+  "missing_delivery_status": 1,
+  "delayed_or_failed_orders": 2,
+  "rows": [
+    {
+      "order_id": "ORD-1001",
+      "customer_email": "anna@example.com",
+      "customer_segment": "vip",
+      "total_amount": 149.9,
+      "payment_status": "paid",
+      "delivery_status": "delivered",
+      "carrier": "dhl"
+    },
+    {
+      "order_id": "ORD-1002",
+      "customer_email": "boris@example.com",
+      "customer_segment": "standard",
+      "total_amount": 42.5,
+      "payment_status": "paid",
+      "delivery_status": "delayed",
+      "carrier": "ups"
+    },
+    {
+      "order_id": "ORD-1003",
+      "customer_email": "carol@example.com",
+      "customer_segment": "vip",
+      "total_amount": 220.0,
+      "payment_status": "refunded",
+      "delivery_status": "failed",
+      "carrier": "dhl"
+    },
+    {
+      "order_id": "ORD-1004",
+      "customer_email": "daria@example.com",
+      "customer_segment": "standard",
+      "total_amount": 15.99,
+      "payment_status": "paid",
+      "delivery_status": "delivered",
+      "carrier": "dpd"
+    },
+    {
+      "order_id": "ORD-1005",
+      "customer_email": "egor@example.com",
+      "customer_segment": "new",
+      "total_amount": 88.4,
+      "payment_status": "paid",
+      "delivery_status": "missing",
+      "carrier": "n/a"
+    }
+  ]
+}

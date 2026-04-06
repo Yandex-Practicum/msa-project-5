@@ -1,0 +1,26 @@
+app-1  | 
+app-1  |   .   ____          _            __ _ _
+app-1  |  /\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+app-1  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+app-1  |  \/  ___)| |_)| | | | | || (_| |  ) ) ) )
+app-1  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+app-1  |  =========|_|==============|___/=/_/_/_/
+app-1  | 
+app-1  |  :: Spring Boot ::                (v3.5.3)
+app-1  | 
+app-1  | 2026-04-06T10:26:04.693Z  INFO 1 --- [batch-processing] [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 1 (/app/app.jar started by root in /app)
+app-1  | 2026-04-06T10:26:05.698Z  INFO 1 --- [batch-processing] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] launched with the following parameters: [{'run.id':'{value=1, type=class java.lang.Long, identifying=true}'}]
+app-1  | 2026-04-06T10:26:05.721Z  INFO 1 --- [batch-processing] [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [loadLoyaltyStep]
+app-1  | 2026-04-06T10:26:05.775Z  INFO 1 --- [batch-processing] [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [importProductsStep]
+app-1  | 2026-04-06T10:26:05.786Z  INFO 1 --- [batch-processing] [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_off]) into (Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_on])
+app-1  | 2026-04-06T10:26:05.790Z  INFO 1 --- [batch-processing] [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_off]) into (Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_on])
+app-1  | 2026-04-06T10:26:05.791Z  INFO 1 --- [batch-processing] [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]) into (Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on])
+app-1  | 2026-04-06T10:26:05.791Z  INFO 1 --- [batch-processing] [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_off]) into (Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_on])
+app-1  | 2026-04-06T10:26:05.792Z  INFO 1 --- [batch-processing] [           main] c.e.b.ProductItemProcessor               : Transforming (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]) into (Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on])
+app-1  | 2026-04-06T10:26:05.812Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Batch job completed successfully. Verifying products table contents.
+app-1  | 2026-04-06T10:26:05.815Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Loaded product into database: Product[productId=1, productSku=20001, productName=hammer, productAmount=45, productData=Loyality_on]
+app-1  | 2026-04-06T10:26:05.815Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Loaded product into database: Product[productId=2, productSku=30001, productName=sink, productAmount=20, productData=Loyality_on]
+app-1  | 2026-04-06T10:26:05.815Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Loaded product into database: Product[productId=3, productSku=40001, productName=roof_shell, productAmount=256, productData=Loyality_on]
+app-1  | 2026-04-06T10:26:05.815Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Loaded product into database: Product[productId=4, productSku=50001, productName=priming, productAmount=67, productData=Loyality_on]
+app-1  | 2026-04-06T10:26:05.815Z  INFO 1 --- [batch-processing] [           main] c.e.b.JobCompletionNotificationListener  : Loaded product into database: Product[productId=5, productSku=60001, productName=clapboard, productAmount=120, productData=Loyality_on]
+app-1  | 2026-04-06T10:26:05.823Z  INFO 1 --- [batch-processing] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] completed with the following parameters: [{'run.id':'{value=1, type=class java.lang.Long, identifying=true}'}] and the following status: [COMPLETED] in 108ms

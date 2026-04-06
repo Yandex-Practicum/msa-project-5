@@ -1,12 +1,19 @@
 global:
   scrape_interval: 5s
   evaluation_interval: 5s
+  external_labels:
+    project: task-5
+
+rule_files:
+  - /etc/prometheus/alerts.yml
 
 scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus:9090']
 
   - job_name: 'batch-processing'
-    metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['app:9404']
         labels:
           application: batch-processing

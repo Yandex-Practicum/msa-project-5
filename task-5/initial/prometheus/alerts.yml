@@ -1,0 +1,20 @@
+groups:
+  - name: batch-processing-alerts
+    rules:
+      - alert: BatchJobFailed
+        expr: batch_job_last_end_epoch_millis > 0 and batch_job_last_status_code == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Последний запуск Spring Batch завершился ошибкой"
+          description: "Проверьте логи приложения в Kibana и статус jobExecution в PostgreSQL."
+
+      - alert: BatchJobProcessedNoRows
+        expr: batch_job_last_end_epoch_millis > 0 and batch_job_last_write_count < 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Batch job не записал ни одной строки"
+          description: "Возможна проблема с входными CSV или с обработкой данных."
