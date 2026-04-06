@@ -1,0 +1,36 @@
+@startuml c4_spring_batch
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Container: Архитектура ETL-системы с Spring Batch
+
+Person(employee, "Сотрудник склада", "Формирует отчет по остаткам и загружает CSV через ERP")
+
+System_Boundary(gcp, "GCP") {
+
+    Container(frontend, "Web-приложение", "Angular", "Интерфейс для загрузки отчетов и просмотра остатков")
+
+    Container(monolith, "Java-монолит", "WildFly / Java 11", "Бизнес-логика, API для фронтенда")
+
+    Container(batch, "Spring Batch ETL", "Spring Boot / Java 17", "Пакетная обработка CSV: 1. Чтение из файла 2. Обогащение из справочников 3. Запись в БД номенклатуры")
+
+    ContainerDb(inventory_db, "БД номенклатуры", "PostgreSQL", "Актуальные остатки товаров на складах")
+
+    ContainerDb(reference_db, "БД справочных данных", "PostgreSQL", "Характеристики товаров, промо-акции, лояльность")
+
+    Container(gcs, "Файловое хранилище", "Google Cloud Storage", "CSV-файлы отчетов")
+
+    Container(monitoring, "Мониторинг", "Prometheus + Grafana", "Метрики Spring Batch Job: время, статус, ошибки")
+}
+
+Rel(employee, frontend, "Загружает CSV-отчет")
+Rel(frontend, monolith, "REST API", "JSON/HTTP")
+Rel(monolith, gcs, "Сохраняет CSV-файл")
+Rel(monolith, batch, "Запускает ETL Job", "REST API / Event")
+Rel(batch, gcs, "Читает CSV-файл")
+Rel(batch, reference_db, "Читает справочные данные", "JDBC")
+Rel(batch, inventory_db, "Записывает обработанные данные", "JDBC")
+Rel(batch, monitoring, "Экспортирует метрики", "Micrometer")
+Rel(monolith, inventory_db, "Читает остатки", "JDBC")
+
+SHOW_LEGEND()
+@enduml

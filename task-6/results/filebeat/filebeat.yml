@@ -1,0 +1,25 @@
+filebeat.inputs:
+  - type: docker
+    combine_partial: true
+    containers:
+      path: "/var/lib/docker/containers"
+      stream: "stdout"
+      ids:
+        - "*"
+    exclude_files: ['\.gz$']
+    ignore_older: 10m
+
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+
+output.logstash:
+  hosts: ["logstash"]
+
+logging.level: info
+logging.to_files: false
+logging.to_syslog: false

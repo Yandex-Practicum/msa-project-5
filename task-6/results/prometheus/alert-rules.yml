@@ -1,0 +1,29 @@
+groups:
+  - name: batch-processing-alerts
+    rules:
+      - alert: BatchJobFailed
+        expr: spring_batch_job_active{status="FAILED"} > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Spring Batch Job завершился с ошибкой"
+          description: "Job {{ $labels.name }} завершился со статусом FAILED"
+
+      - alert: HighCpuUsage
+        expr: process_cpu_usage{job="batch-processing"} > 0.8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое потребление CPU приложением batch-processing"
+          description: "CPU usage выше 80% в течение 1 минуты: {{ $value }}"
+
+      - alert: AppDown
+        expr: up{job="batch-processing"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Приложение batch-processing недоступно"
+          description: "Prometheus не может подключиться к /actuator/prometheus"
