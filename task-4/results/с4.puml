@@ -1,0 +1,22 @@
+@startuml TradeWare ETL
+!include <C4/C4_Context>
+System_Boundary(tradeWare, "Trade Ware"){
+    SystemDb(files, "Files Storage", "Google Cloud Storage")
+    SystemDb(catalog, "Catalog", "PostgresQL")
+    SystemDb(stock, "Stock", "PostgresQL")
+    System(validator, "Data validation", "Cloud Run Function, Java")
+    System(dataflow, "Batch processing (triggers by GCS event)", "Cloud Run + Spring Cloud Framework")
+    System(front, "UI", " Angular, JS")
+    System(reports, "Reports (by schedule)", "Cloud Run + Spring Cloud Framework")
+    }
+Person(user, "Warehouse manager")
+Rel(user, front, "Upload file")
+Rel(validator, files, "Store file on cloud")
+Rel(dataflow, files, "Collects files")
+Rel(dataflow, stock, "Upload data")
+Rel(dataflow, catalog, "Upload data")
+BiRel(front, validator, "Validate data in file", gRPC)
+Rel_U(reports, stock, "Collect data")
+Rel_U(reports, catalog, "Collect data")
+Rel_U(reports, files, "Create report")
+@enduml

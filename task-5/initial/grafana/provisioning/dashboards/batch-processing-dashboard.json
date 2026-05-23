@@ -26,7 +26,6 @@
   "graphTooltip": 0,
   "id": 1,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -35,13 +34,15 @@
       },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -53,45 +54,182 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "spring_batch_step_seconds_max{application=\"batch-processing\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "{{spring_batch_step_name}} max seconds",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "step seconds max",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
         "w": 12,
         "x": 12,
         "y": 0
       },
       "id": 2,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
         },
-        "text": {},
-        "textMode": "auto"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "9.5.15",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
-          "expr": "process_cpu_usage{job=\"batch-processing\"} * 100",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "batch-processing",
-          "refId": "A"
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "process_cpu_usage{application=\"batch-processing\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
         }
       ],
       "title": "CPU",
-      "transparent": true,
-      "type": "stat"
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 6,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "spring_batch_job_launch_count_total{application=\"batch-processing\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Job launch total",
+      "type": "gauge"
     }
   ],
+  "preload": false,
   "refresh": "5s",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 41,
   "tags": [],
   "templating": {
     "list": [
@@ -100,11 +238,9 @@
         "auto_count": 30,
         "auto_min": "10s",
         "current": {
-          "selected": false,
           "text": "1m",
           "value": "1m"
         },
-        "hide": 0,
         "name": "timeRate",
         "options": [
           {
@@ -164,9 +300,7 @@
           }
         ],
         "query": "1m,5m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
-        "queryValue": "",
         "refresh": 2,
-        "skipUrlSync": false,
         "type": "interval"
       }
     ]
@@ -191,6 +325,5 @@
   "timezone": "",
   "title": "batch-processing-dashboard",
   "uid": "wcsvkAwZt",
-  "version": 1,
-  "weekStart": ""
+  "version": 2
 }

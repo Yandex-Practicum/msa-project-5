@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: export-config
+  namespace: data-export
+data:
+  EXPORT_TABLE: "shipments"
+  OUTPUT_DIR: "/app/output"

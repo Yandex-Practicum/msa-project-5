@@ -11,6 +11,8 @@ services:
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/1-schema.sql
 
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.28'
@@ -63,7 +65,14 @@ services:
     depends_on:
       - 'elasticsearch'
       - 'logstash'
-
+  # 1. Сервис Prometheus Pushgateway
+  pushgateway:
+    image: prom/pushgateway:v1.10.0
+    container_name: pushgateway
+    ports:
+      - "9091:9091"
+    restart: unless-stopped
+    
   prometheus:
     image: 'prom/prometheus:v3.4.0'
     container_name: 'prometheus'
@@ -93,10 +102,13 @@ services:
   app:
     depends_on:
       - postgresdb
-      - filebeat1
+      - filebeat
       - grafana
     image: batch-processing
+    ports:
+      - '8080:8080'
     build:
       context: .
       dockerfile: ./Dockerfile
     restart: no
+    

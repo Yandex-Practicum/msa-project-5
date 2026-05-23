@@ -5,8 +5,9 @@ global:
 scrape_configs:
 
   - job_name: 'batch-processing'
-    metrics_path: '/actuator/prometheus'
+    honor_labels: true # ВАЖНО: сохраняет теги (labels), которые передало ваше приложение
+    metrics_path: '/metrics' # Явное указание стандартного пути Pushgateway
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: [ 'pushgateway:9091' ] # Адрес самого Pushgateway
         labels:
           application: batch-processing

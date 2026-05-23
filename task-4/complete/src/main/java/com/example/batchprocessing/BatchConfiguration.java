@@ -31,6 +31,16 @@ public class BatchConfiguration {
 			.targetType(Product.class)
 			.build();
 	}
+	@Bean
+    	public FlatFileItemReader<Loyality> readerL() {
+    		return new FlatFileItemReaderBuilder<Loyality>()
+    			.name("loyalityItemReader")
+    			.resource(new ClassPathResource("loyality_data.csv"))
+    			.delimited()
+    			.names("productSku","loyalityData")
+    			.targetType(Loyality.class)
+    			.build();
+    	}
 
 	@Bean
 	public ProductItemProcessor processor() {
@@ -46,12 +56,21 @@ public class BatchConfiguration {
 			.beanMapped()
 			.build();
 	}
-
+    @Bean
+	public JdbcBatchItemWriter<Loyality> writerL(DataSource dataSource) {
+		return new JdbcBatchItemWriterBuilder<Loyality>()
+			.sql("INSERT INTO loyality_data (productSku, loyalityData) " +
+					"VALUES (:productSku, :loyalityData)")
+			.dataSource(dataSource)
+			.beanMapped()
+			.build();
+	}
 	@Bean
-	public Job importProductJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
+	public Job importProductJob(JobRepository jobRepository, Step step0, Step step1, JobCompletionNotificationListener listener) {
 		return new JobBuilder("importProductJob", jobRepository)
 			.listener(listener)
-			.start(step1)
+			.start(step0)
+			.next(step1)
 			.build();
 	}
 
@@ -65,5 +84,15 @@ public class BatchConfiguration {
 			.writer(writer)
 			.build();
 	}
+	
+	@Bean
+    	public Step step0(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
+    					  FlatFileItemReader<Loyality> readerL, JdbcBatchItemWriter<Loyality> writerL) {
+    		return new StepBuilder("step0", jobRepository)
+    			.<Loyality, Loyality>chunk(3, transactionManager)
+    			.reader(readerL)
+    			.writer(writerL)
+    			.build();
+    	}
 
 }

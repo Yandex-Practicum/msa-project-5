@@ -1,0 +1,12 @@
+@startuml Online-Shop Prices
+!include <C4/C4_Context>
+System_Boundary(k8s, "k8s"){
+    SystemDb(db,"Price lists", "PostgresQL")
+    SystemDb(s3, "S3 storage")
+    System(export, "Export System", "Cron Job + Python")
+    Rel_U(export, db, "Run SQL by schedule")
+    Rel_D(export, s3, "Save CSV file")
+    }
+Person(b2b, "B2B client")
+Rel_R(b2b, s3, "Download price lists")
+@enduml
