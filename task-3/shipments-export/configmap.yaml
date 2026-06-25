@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipments-export-config
+  namespace: data-exports
+  labels:
+    app: shipments-export
+data:
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "shipments_db"
+  S3_ENDPOINT: "http://minio.storage.svc.cluster.local:9000"
+  S3_BUCKET: "shipments-analytics"
+  AWS_REGION: "us-east-1"
+  TEMP_DIR: "/tmp/exports"
+  LOG_LEVEL: "INFO"
+  CRON_SCHEDULE: "0 20 * * *"
+  CRON_TIMEZONE: "Europe/Moscow"

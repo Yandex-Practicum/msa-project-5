@@ -1,0 +1,9 @@
+
+    Marketing Data Processing Summary:
+    =================================
+    Total Orders Processed: 10
+    Completed Orders: 6
+    Delayed Orders: 2
+    Failed Orders: 2
+    Status: PROBLEMS DETECTED
+    

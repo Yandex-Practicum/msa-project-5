@@ -1,0 +1,32 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Context Diagram - Система генерации B2B прайс-листов
+
+Person(b2b_client, "B2B Клиент", "Получает персональные прайс-листы в CSV/XLS формате")
+Person(admin, "Администратор магазина", "Управляет конфигурацией выгрузки и отслеживает выполнение")
+
+System_Boundary(pricing_system, "Система генерации B2B прайс-листов") {
+    System(price_list_gen, "Price List Generator", "Автоматически формирует кастомные прайс-листы на основе данных БД и загружает в Object Storage")
+}
+
+System_Ext(postgres, "PostgreSQL (Основная БД магазина)", "Хранит таблицы: products, categories, clients, client_prices")
+System_Ext(s3_storage, "Object Storage (S3/MinIO)", "Хранилище сгенерированных прайс-листов для скачивания клиентами")
+System_Ext(monitoring, "Система мониторинга (Prometheus + Grafana + ELK)", "Сбор метрик, логов и алертинг")
+System_Ext(email_service, "Email Service (SMTP)", "Отправка уведомлений о статусе генерации")
+System_Ext(k8s, "Kubernetes Cluster", "Оркестрация и управление жизненным циклом контейнеров")
+
+Rel(b2b_client, s3_storage, "Скачивает прайс-листы", "HTTPS (S3 API)")
+Rel(admin, price_list_gen, "Настраивает расписание и параметры", "kubectl / K8s Dashboard")
+Rel(admin, monitoring, "Просматривает метрики и логи", "HTTPS (Grafana/Kibana)")
+
+Rel(price_list_gen, postgres, "Читает данные (SELECT с JOIN)", "JDBC (PostgreSQL)")
+Rel(price_list_gen, s3_storage, "Записывает сгенерированные файлы", "S3 API (HTTPS)")
+Rel(price_list_gen, email_service, "Отправляет уведомления о статусе", "SMTP")
+Rel(price_list_gen, monitoring, "Экспортирует метрики и логи", "HTTP (Prometheus) / Filebeat (ELK)")
+
+Rel(k8s, price_list_gen, "Управляет запуском CronJob", "K8s API")
+
+@enduml
