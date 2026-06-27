@@ -1,4 +1,9 @@
-CREATE TABLE products  (
+CREATE TABLE IF NOT EXISTS loyality_data (
+    productSku BIGINT NOT NULL PRIMARY KEY,
+    loyalityData VARCHAR(120)
+);
+
+CREATE TABLE IF NOT EXISTS products (
     productId BIGINT NOT NULL PRIMARY KEY,
     productSku BIGINT NOT NULL,
     productName VARCHAR(20),
@@ -6,7 +11,11 @@ CREATE TABLE products  (
     productData VARCHAR(120)
 );
 
-CREATE TABLE loyality_data  (
-    productSku BIGINT NOT NULL PRIMARY KEY,
-    loyalityData VARCHAR(120)
-);
+TRUNCATE loyality_data;
+TRUNCATE products;
+
+INSERT INTO loyality_data (productSku, loyalityData) VALUES
+(20001, 'Loyality_on'),
+(30001, 'Loyality_on'),
+(50001, 'Loyality_on'),
+(60001, 'Loyality_on');

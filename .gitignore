@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -104,6 +103,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -142,6 +143,12 @@ cython_debug/
 *.swo
 *~
 .DS_Store
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
 
 # Kubernetes
 *.kubeconfig
@@ -161,9 +168,6 @@ charts/*/tmp/
 .terraform/
 
 # Airflow specific
-# =================
-
-# Airflow logs
 logs/
 airflow.db
 airflow-webserver.pid
@@ -171,47 +175,32 @@ airflow-scheduler.pid
 airflow.cfg
 airflow.db.backup
 airflow.cfg.backup
-
-# Airflow dags compiled
-*.pyc
-
-# Airflow plugins
-plugins/
-
-# Airflow variables
-airflow_variables.json
-airflow_variables.*.json
-
-# Airflow connections
-airflow_connections.json
-airflow_connections.*.json
-
-# Airflow pools
-airflow_pools.json
-airflow_pools.*.json
-
-# DAG files with sensitive data
-*_secret.py
-*_credentials.py
-*_sensitive.py
-
-# Airflow logs and data
 airflow/logs/
 airflow/dags/__pycache__/
 airflow/plugins/__pycache__/
+airflow-scheduler.err
+airflow-scheduler.out
+airflow-webserver.err
+airflow-webserver.out
+airflow_variables.json
+airflow_variables.*.json
+airflow_connections.json
+airflow_connections.*.json
+airflow_pools.json
+airflow_pools.*.json
+*_secret.py
+*_credentials.py
+*_sensitive.py
+*_dag_secret.py
+*_dag_credentials.py
 
 # Docker
-# ======
-
-# Docker volumes
 volumes/
 docker/volumes/
 postgres_data/
 redis_data/
 minio_data/
 *.pid
-
-# Docker Compose
 docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
@@ -220,33 +209,7 @@ docker-compose.*.yml
 # Minio
 minio/
 
-# PostgreSQL
-*.pem
-*.key
-
-# Backup files
-*.backup
-*.bak
-*.old
-
-# Temporary export files
-/tmp/exports/
-*.csv
-*.json
-!requirements.txt
-!package.json
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Logs
-*.log
-logs/
-
 # Credentials
-# ===========
 .aws/
 .azure/
 .gcloud/
@@ -261,100 +224,76 @@ secrets/
 *.keystore
 *.truststore
 
-# Python package manager
-# ======================
-pip-wheel-metadata/
-share/python-wheels/
-*.dist-info/
-*.egg-info/
-
-# Type checking
-mypy_cache/
-.pytype/
-
-# Testing
-.pytest_cache/
-.tox/
-.coverage
-coverage.xml
-htmlcov/
-
 # Database
 *.sqlite3
 *.db
+
+# Backup files
+*.backup
+*.bak
+*.old
+*.backup.yaml
+*.backup.yml
 
 # Temp files
 tmp/
 temp/
 *.tmp
-
-# VS Code
-.vscode/
-*.code-workspace
-
-# MacOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Thumbnails
-._*
-
-# Files that might appear in the root of a volume
-.directory
-
-# Airflow DAGs with sensitive data
-*_dag_secret.py
-*_dag_credentials.py
-
-# Specific to your project
-# ========================
-
-# Exported CSV files
+/tmp/exports/
 exports/
 /data/
-/tmp/exports/
 
-# Airflow generated files
-airflow-scheduler.err
-airflow-scheduler.out
-airflow-webserver.err
-airflow-webserver.out
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.directory
 
-# Local development files
+# ========================
+# Java / Gradle / Spring Boot
+# ========================
+
+# Compiled Java classes
+*.class
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Spring Boot
+/bin/
+
+# Logs
+application.log
+spring.log
+
+# Package files
+*.jar
+*.war
+*.ear
+!gradle/wrapper/gradle-wrapper.jar
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ========================
+# Project specific
+# ========================
+
+# CSV files (except data in resources)
+*.csv
+!src/main/resources/product-data.csv
+
+# SQL files (except schema)
+*.sql
+!schema-all.sql
+
+# Local development
 .local/
 .dev/
-
-# Backup of Kubernetes configs
-*.backup.yaml
-*.backup.yml
-
-# IDE specific
-.idea/
-*.iml
-.project
-.classpath
-.settings/
-*.code-workspace
-
-# Kubernetes secrets (never commit real secrets!)
-*-secret.yaml
-*secret*.yaml
-!*-secret-template.yaml
-!*secret-template.yaml
-!**/secret-template.yaml
-!**/*-secret-template.yaml
-
-# Environment variables
-.env.local
-.env.*.local
-.env
-.env.production
-.env.staging
-.env.development
-
-# Python wheels
-*.whl
-
-# Pytest
-.pytest_cache/

@@ -1,0 +1,107 @@
+@startuml c4-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title Диаграмма контейнеров — Batch ETL Service (Spring Batch)
+
+' Внешние контейнеры
+Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "Принимает запросы на запуск ETL, возвращает статус задач")
+Container(gcs, "Google Cloud Storage", "GCS Buckets", "Хранит загруженные CSV-файлы отчётов")
+ContainerDb(postgres, "PostgreSQL", "Реляционная БД", "Хранит товарные остатки, данные лояльности и метаданные Batch")
+Container(monitoring, "Monitoring Stack", "Prometheus + Grafana", "Метрики и алертинг")
+Container(logging, "Logging Stack", "ELK / Loki", "Централизованные логи")
+
+' Границы Batch ETL Service
+System_Boundary(batch_service, "Batch ETL Service (Spring Boot + Spring Batch)") {
+
+    ' REST API слой
+    Container(rest_controller, "Job Controller", "Spring MVC REST", "Endpoint для запуска задачи: POST /api/jobs/process-file. Проверка статуса: GET /api/jobs/{jobId}/status")
+
+    ' Spring Batch компоненты
+    Container(job_launcher, "Job Launcher", "Spring Batch", "Асинхронный запуск Job. Принимает параметры: путь к файлу, тип отчёта")
+
+    Container(job, "Product Import Job", "Spring Batch Job", "Корневая единица обработки. Состоит из одного Step: importProductStep")
+
+    Container(step, "importProductStep", "Spring Batch Step", "Шаг обработки с конфигурацией chunk (size=100). Состоит из Reader → Processor → Writer")
+
+    ' Компоненты шага
+    Container(reader, "FlatFileItemReader", "Spring Batch", "Читает CSV из GCS построчно. Пропускает заголовок. Маппит поля в ProductInput DTO")
+
+    Container(processor, "ProductProcessor", "Custom Processor", "Для каждой записи: запрос в loyalty_data через JdbcTemplate → расчёт final_price → создание ProductOutput")
+
+    Container(writer, "JdbcBatchItemWriter", "Spring Batch", "Пакетная вставка (batch insert) в таблицу products. Upsert через ON CONFLICT DO UPDATE")
+
+    ' Компоненты инфраструктуры
+    Container(job_repo, "JobRepository", "Spring Batch", "Хранит состояние Job/Step выполнений в PostgreSQL. Позволяет перезапуск с точки сбоя")
+
+    Container(skip_listener, "SkipListener", "Spring Batch", "Логирует пропущенные строки с указанием причины. Сохраняет битые записи в error_records")
+
+    Container(retry_template, "RetryTemplate", "Spring Retry", "Повторяет операции при временных сбоях (SQLException, IOException). До 3 попыток с экспоненциальной задержкой")
+
+    Container(metrics, "Micrometer", "Metrics Exporter", "Экспортирует метрики выполнения (read count, write count, duration, error count) в Prometheus")
+}
+
+' Отношения — вход в систему
+Rel(api_gateway, rest_controller, "POST /api/jobs/process-file", "REST/JSON")
+Rel(rest_controller, job_launcher, "Запуск Job с параметрами", "Method call (async)")
+
+' Отношения — Job Launcher
+Rel(job_launcher, job, "Запускает", "JobParameters")
+Rel(job, step, "Содержит", "Step Configuration")
+Rel(job, job_repo, "Сохраняет состояние", "JDBC")
+
+' Отношения — Step (chunk processing)
+Rel(step, reader, "1. Читает чанк", "ChunkOrientedTasklet")
+Rel(step, processor, "2. Обрабатывает", "ItemProcessor")
+Rel(step, writer, "3. Записывает", "ItemWriter")
+
+' Отношения — Reader
+Rel(reader, gcs, "Читает CSV файл", "GCS Client Library (HTTPS)")
+
+' Отношения — Processor
+Rel(processor, postgres, "SELECT * FROM loyalty_data WHERE product_id = ?", "JDBC (JdbcTemplate)")
+Rel(processor, retry_template, "Повтор при ошибке запроса", "RetryCallback")
+
+' Отношения — Writer
+Rel(writer, postgres, "INSERT INTO products (...) ON CONFLICT DO UPDATE", "JDBC Batch")
+
+' Отношения — Job Repository
+Rel(job_repo, postgres, "Чтение/запись метаданных в BATCH_* таблицах", "JDBC")
+
+' Отношения — обработка ошибок
+Rel(reader, skip_listener, "При ошибке формата строки", "SkipListener.onSkipInRead()")
+Rel(processor, skip_listener, "При ошибке обработки", "SkipListener.onSkipInProcess()")
+Rel(writer, skip_listener, "При ошибке записи", "SkipListener.onSkipInWrite()")
+Rel(skip_listener, postgres, "INSERT INTO error_records", "JDBC")
+
+' Отношения — мониторинг
+Rel(metrics, monitoring, "Метрики (read_count, write_count, duration)", "Prometheus endpoint")
+Rel(skip_listener, logging, "Логи пропущенных записей", "Logback/SLF4J")
+Rel(processor, logging, "Логи обработки (product_id, loyalty_applied)", "Logback/SLF4J")
+
+' Примечания
+note right of processor
+  <b>Логика обогащения:</b>
+  1. Получение loyalty_data по product_id
+  2. Если данные есть:
+     final_price = price * (1 - discount/100)
+  3. Если данных нет:
+     loyalty_program = "Standard"
+     discount = 0, final_price = price
+  4. Установка processed_at = now()
+end note
+
+note bottom of writer
+  <b>Upsert SQL:</b>
+  INSERT INTO products (...)
+  VALUES (...)
+  ON CONFLICT (product_id)
+  DO UPDATE SET
+    product_name = EXCLUDED.product_name,
+    final_price = EXCLUDED.final_price,
+    processed_at = EXCLUDED.processed_at
+end note
+
+@enduml
