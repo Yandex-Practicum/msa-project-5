@@ -1,0 +1,45 @@
+@startuml c4-context-simple
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Context - TradeWare ETL System
+
+Person(warehouse_staff, "Warehouse Staff", "Uploads CSV inventory reports")
+Person(manager, "Warehouse Manager", "Views stock and analytics")
+
+System_Ext(partner_systems, "Partner Systems", "External logistics partners")
+System_Ext(gcs, "Google Cloud Storage", "CSV file storage")
+
+System_Boundary(tradeware, "TradeWare System") {
+    
+    System(frontend, "Frontend App", "Angular, WebSockets")
+    System(api_gateway, "API Gateway", "Spring Cloud Gateway")
+    System(erp_monolith, "ERP Monolith", "Java 11, WildFly")
+    System(batch_etl, "Batch ETL Service", "Spring Boot + Spring Batch")
+    System(postgres, "PostgreSQL", "Relational Database")
+    System(monitoring, "Monitoring", "Prometheus + Grafana")
+    System(logging, "Logging", "ELK / Loki")
+}
+
+Rel(warehouse_staff, frontend, "Uploads CSV", "HTTPS")
+Rel(manager, frontend, "Views stock", "HTTPS")
+
+Rel(frontend, api_gateway, "API requests", "JSON/HTTPS")
+
+Rel(api_gateway, erp_monolith, "Business operations", "REST")
+Rel(api_gateway, batch_etl, "Start ETL job", "REST")
+
+Rel(batch_etl, gcs, "Read CSV", "GCS API")
+Rel(batch_etl, postgres, "Read/Write data", "JDBC")
+Rel(erp_monolith, postgres, "Read/Write", "JDBC")
+Rel(erp_monolith, gcs, "Save CSV", "GCS API")
+
+Rel(partner_systems, api_gateway, "Integration API", "REST")
+
+Rel(batch_etl, monitoring, "Metrics", "Micrometer")
+Rel(erp_monolith, monitoring, "Metrics", "JMX")
+Rel(batch_etl, logging, "Logs", "Fluentd")
+Rel(erp_monolith, logging, "Logs", "Fluentd")
+
+@enduml

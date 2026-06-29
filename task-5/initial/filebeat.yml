@@ -1,0 +1,25 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/batch-processing/application-json.log
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: message
+    fields:
+      app: batch-processing
+      env: local
+    fields_under_root: true
+    processors:
+      - add_host_metadata: ~
+      - add_cloud_metadata: ~
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7

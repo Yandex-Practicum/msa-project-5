@@ -1,65 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property resource="application.properties"/>
-    <contextName>${spring.application.name}</contextName>
-    <springProfile name="!non-json-logs">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-                <providers>
-                    <pattern>
-                        <pattern>
-                            {
-                            "trace": "%X{traceId:-}",
-                            "span": "%X{spanId:-}",
-                            "parent": "%X{parentId:-}",
-                            "exportable": "%X{sampled:-}",
-                            "pid": "${PID:-}"
-                            }
-                        </pattern>
-                    </pattern>
-                    <contextName>
-                        <fieldName>app</fieldName>
-                    </contextName>
-                    <timestamp>
-                        <fieldName>ts</fieldName>
-                        <timeZone>UTC</timeZone>
-                    </timestamp>
-                    <loggerName>
-                        <fieldName>logger</fieldName>
-                    </loggerName>
-                    <logLevel>
-                        <fieldName>level</fieldName>
-                    </logLevel>
-                    <callerData>
-                        <classFieldName>class</classFieldName>
-                        <methodFieldName>method</methodFieldName>
-                        <lineFieldName>line</lineFieldName>
-                        <fileFieldName>file</fileFieldName>
-                    </callerData>
-                    <threadName>
-                        <fieldName>thread</fieldName>
-                    </threadName>
-                    <mdc/>
-                    <arguments>
-                        <includeNonStructuredArguments>false</includeNonStructuredArguments>
-                    </arguments>
-                    <stackTrace>
-                        <fieldName>stack</fieldName>
-                    </stackTrace>
-                    <message>
-                        <fieldName>msg</fieldName>
-                    </message>
-                </providers>
-            </encoder>
-        </appender>
-    </springProfile>
-    <springProfile name="non-json-logs">
-        <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    </springProfile>
-    <logger name="batch-processing" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
+    <property name="LOGS" value="/var/log/batch-processing" />
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] [%X{traceId:-}/%X{spanId:-}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="JsonFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/application-json.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"batch-processing"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+            </fieldNames>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>uri</includeMdcKeyName>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/application-json-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="org.springframework.web" level="DEBUG" additivity="false">
+        <appender-ref ref="Console" />
+        <appender-ref ref="JsonFile" />
     </logger>
+
+    <logger name="com.example.batchprocessing" level="INFO" additivity="false">
+        <appender-ref ref="Console" />
+        <appender-ref ref="JsonFile" />
+    </logger>
+
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="Console" />
+        <appender-ref ref="JsonFile" />
     </root>
 </configuration>

@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgresdb:
-    image: postgres
+    image: postgres:15-alpine
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -11,12 +11,24 @@ services:
       - POSTGRES_DB=$POSTGRESDB_DATABASE
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./schema-all.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRESDB_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     depends_on:
-      - postgresdb
+      postgresdb:
+        condition: service_healthy
     image: batch-processing
     build:
       context: .
       dockerfile: ./Dockerfile
     restart: no
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresdb:5432/productsdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123456

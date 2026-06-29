@@ -1,0 +1,50 @@
+@startuml c4-context-monitoring
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Context - TradeWare ETL with Monitoring
+
+Person(warehouse_staff, "Warehouse Staff", "Uploads CSV reports")
+Person(manager, "Warehouse Manager", "Views stock and analytics")
+Person(devops, "DevOps Engineer", "Monitors system health")
+
+System_Ext(gcs, "Google Cloud Storage", "CSV file storage")
+
+System_Boundary(tradeware, "TradeWare System") {
+    Container(frontend, "Frontend App", "Angular, WebSockets", "UI for warehouse staff")
+    Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "Routing, auth, rate limiting")
+    Container(erp_monolith, "ERP Monolith", "Java 11, WildFly", "Business logic")
+    Container(batch_etl, "Batch ETL Service", "Spring Boot + Spring Batch", "Async batch processing")
+    ContainerDb(postgres, "PostgreSQL", "Relational Database", "Inventory, loyalty data, Batch metadata")
+}
+
+System_Boundary(monitoring, "Monitoring & Logging Stack") {
+    Container(prometheus, "Prometheus", "TSDB", "Metrics collection and alerting")
+    Container(grafana, "Grafana", "Visualization", "Dashboards and alerting rules")
+    Container(elasticsearch, "Elasticsearch", "Search Engine", "Log storage and indexing")
+    Container(logstash, "Logstash", "Log Pipeline", "Log processing and transformation")
+    Container(kibana, "Kibana", "Visualization", "Log exploration and dashboards")
+    Container(filebeat, "Filebeat", "Log Shipper", "Collects logs and sends to Logstash")
+}
+
+Rel(warehouse_staff, frontend, "Uploads CSV", "HTTPS")
+Rel(manager, frontend, "Views stock", "HTTPS")
+Rel(frontend, api_gateway, "API requests", "JSON/HTTPS")
+Rel(api_gateway, erp_monolith, "Business ops", "REST")
+Rel(api_gateway, batch_etl, "Start ETL job", "REST")
+Rel(batch_etl, gcs, "Read CSV", "GCS API")
+Rel(batch_etl, postgres, "Read/Write data", "JDBC")
+
+' Monitoring relations
+Rel(batch_etl, prometheus, "Expose metrics", "Micrometer/Actuator")
+Rel(prometheus, grafana, "Data source", "PromQL")
+Rel(batch_etl, filebeat, "Application logs", "Filebeat")
+Rel(filebeat, logstash, "Ship logs", "Beats protocol")
+Rel(logstash, elasticsearch, "Index logs", "HTTP")
+Rel(elasticsearch, kibana, "Data source", "HTTP")
+Rel(devops, grafana, "View dashboards", "HTTPS:3000")
+Rel(devops, kibana, "Explore logs", "HTTPS:5601")
+Rel(devops, prometheus, "AlertManager", "HTTPS:9090")
+
+@enduml

@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipments-export
+  namespace: data-exports
+spec:
+  schedule: "0 20 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: export
+              image: data-exporter:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: DB_HOST
+                  valueFrom:
+                    configMapKeyRef:
+                      name: shipments-export-config
+                      key: DB_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    configMapKeyRef:
+                      name: shipments-export-config
+                      key: DB_PORT
+                - name: DB_NAME
+                  valueFrom:
+                    configMapKeyRef:
+                      name: shipments-export-config
+                      key: DB_NAME
+                - name: DB_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: shipments-export-secrets
+                      key: DB_USERNAME
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: shipments-export-secrets
+                      key: DB_PASSWORD
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "500m"

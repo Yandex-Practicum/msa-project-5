@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-exports
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: data-exports
+data:
+  init.sql: |
+    CREATE TABLE drivers (
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(20),
+        license_number VARCHAR(50),
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE vehicles (
+        id SERIAL PRIMARY KEY,
+        plate_number VARCHAR(20),
+        model VARCHAR(100),
+        capacity_kg DECIMAL(10,2),
+        type VARCHAR(50),
+        status VARCHAR(20) DEFAULT 'available',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE clients (
+        id SERIAL PRIMARY KEY,
+        company_name VARCHAR(200),
+        contact_person VARCHAR(100),
+        email VARCHAR(100),
+        phone VARCHAR(20),
+        city VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE shipments (
+        id SERIAL PRIMARY KEY,
+        shipment_number VARCHAR(50) NOT NULL,
+        client_id INTEGER REFERENCES clients(id),
+        driver_id INTEGER REFERENCES drivers(id),
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        origin VARCHAR(200),
+        destination VARCHAR(200),
+        status VARCHAR(20) DEFAULT 'created',
+        weight_kg DECIMAL(10,2),
+        price DECIMAL(12,2),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE shipment_events (
+        id SERIAL PRIMARY KEY,
+        shipment_id INTEGER REFERENCES shipments(id),
+        event_type VARCHAR(50),
+        event_description TEXT,
+        latitude DECIMAL(10,6),
+        longitude DECIMAL(10,6),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX idx_shipments_created_at ON shipments(created_at);
+    CREATE INDEX idx_shipment_events_shipment_id ON shipment_events(shipment_id);
+
+    INSERT INTO drivers (first_name, last_name, phone, license_number, status)
+    SELECT 'Иван'||g, 'Петров'||g, '+7900'||LPAD(g::TEXT,7,'0'), 'LIC-'||LPAD(g::TEXT,6,'0'), CASE WHEN g%5=0 THEN 'inactive' ELSE 'active' END
+    FROM generate_series(1,100) g;
+
+    INSERT INTO vehicles (plate_number, model, capacity_kg, type, status)
+    SELECT 'A'||LPAD(g::TEXT,3,'0')||'BC', CASE (g%3) WHEN 0 THEN 'ГАЗель' WHEN 1 THEN 'КАМАЗ' WHEN 2 THEN 'MAN' END, 5000+(g*100), CASE (g%3) WHEN 0 THEN 'фургон' WHEN 1 THEN 'тягач' WHEN 2 THEN 'рефрижератор' END, 'available'
+    FROM generate_series(1,50) g;
+
+    INSERT INTO clients (company_name, contact_person, email, phone, city)
+    SELECT 'ООО Компания-'||g, 'Контакт '||g, 'info'||g||'@mail.ru', '+7495'||LPAD(g::TEXT,7,'0'), CASE (g%5) WHEN 0 THEN 'Москва' WHEN 1 THEN 'СПб' WHEN 2 THEN 'Новосибирск' WHEN 3 THEN 'Екатеринбург' WHEN 4 THEN 'Казань' END
+    FROM generate_series(1,200) g;
+
+    INSERT INTO shipments (shipment_number, client_id, driver_id, vehicle_id, origin, destination, status, weight_kg, price, created_at)
+    SELECT 'SHIP-'||TO_CHAR(CURRENT_DATE-(g%3),'YYYYMMDD')||'-'||LPAD(g::TEXT,4,'0'), (g%200)+1, (g%100)+1, (g%50)+1, 'Город-'||(g%20), 'Город-'||((g+7)%20), CASE (g%4) WHEN 0 THEN 'delivered' WHEN 1 THEN 'in_transit' WHEN 2 THEN 'picked_up' WHEN 3 THEN 'created' END, 500+(g*10), 5000+(g*50), CURRENT_DATE-(g%3)+(g%12)*INTERVAL'1 hour'
+    FROM generate_series(1,1000) g;
+
+    INSERT INTO shipment_events (shipment_id, event_type, event_description, latitude, longitude, created_at)
+    SELECT s.id, CASE (g%3) WHEN 0 THEN 'status_change' WHEN 1 THEN 'location_update' WHEN 2 THEN 'photo_added' END, 'Событие по '||s.shipment_number, 55.75+(g%10)-5, 37.61+(g%10)-5, s.created_at+(g*4)*INTERVAL'1 hour'
+    FROM shipments s CROSS JOIN generate_series(0, 2+(s.id%3)) g;
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: data-exports
+type: Opaque
+stringData:
+  POSTGRES_USER: exporter
+  POSTGRES_PASSWORD: exporter123
+  POSTGRES_DB: shipments_db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: data-exports
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        volumeMounts:
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: data-exports
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432

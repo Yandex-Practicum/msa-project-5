@@ -5,42 +5,48 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ProductItemProcessor implements ItemProcessor<Product, Product> {
 
-	private static final Logger log = LoggerFactory.getLogger(ProductItemProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(ProductItemProcessor.class);
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
-	public Product process(final Product product) {
-		final Long productId = product.productId();
-		final Long productSku = product.productSku();
-		final String productName = product.productName();
-		final Long productAmount = product.productAmount();
-		final String productData = product.productData();
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Product process(final Product product) {
+        log.info("Processing: id={}, sku={}, name={}, data={}",
+                product.productId(), product.productSku(),
+                product.productName(), product.productData());
 
-		AtomicReference<Product> transformedProduct = new AtomicReference<>(new Product(productId, productSku, productName, productAmount, productData));
+        String newProductData = product.productData();
 
-		String sql = "SELECT * FROM loyality_data WHERE productSku=" + productSku ;
-		jdbcTemplate.query(sql, new DataClassRowMapper<>(Loyality.class))
-				.stream().findAny().map(Loyality::loyalityData).map(loyalityData -> {
-                    return new Product(productId, productSku, productName, productAmount, loyalityData);
-				}).map( p -> {
-					transformedProduct.set(p);
-                    return null;
-                });
+        if ("Loyality_off".equalsIgnoreCase(product.productData())) {
+            String sql = "SELECT loyalityData FROM loyality_data WHERE productSku = ?";
+            var results = jdbcTemplate.query(sql,
+                    (rs, rowNum) -> rs.getString("loyalityData"),
+                    product.productSku());
 
-		log.info("Transforming ({}) into ({})", product, transformedProduct.get());
+            if (!results.isEmpty()) {
+                log.info("  -> SKU {} found. Updating to Loyality_on", product.productSku());
+                newProductData = "Loyality_on";
+            } else {
+                log.info("  -> SKU {} not in loyality_data", product.productSku());
+            }
+        }
 
-		return transformedProduct.get();
-	}
-
+        return new Product(
+                product.productId(),
+                product.productSku(),
+                product.productName(),
+                product.productAmount(),
+                newProductData
+        );
+    }
 }
