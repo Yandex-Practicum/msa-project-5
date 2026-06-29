@@ -1,33 +1,58 @@
 plugins {
-	id 'org.springframework.boot' version '3.5.3'
-	id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'java'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
-
-apply plugin: 'io.spring.dependency-management'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2024.0.1")
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-batch'
-//	runtimeOnly 'org.hsqldb:hsqldb'
-	implementation("org.postgresql:postgresql:42.2.5")
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-	implementation "net.logstash.logback:logstash-logback-encoder:8.1"
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    // Metrics
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-core'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.batch:spring-batch-test'
+    // OpenTelemetry
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+    implementation 'io.opentelemetry:opentelemetry-sdk-extension-autoconfigure'
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter'
+
+    // Logging
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    implementation 'org.postgresql:postgresql:42.2.5'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
 }
 
-test {
-	useJUnitPlatform()
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "io.opentelemetry:opentelemetry-bom:1.33.0"
+        mavenBom "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.33.0-alpha"
+    }
+}
 
+tasks.named('test') {
+    useJUnitPlatform()
 }
