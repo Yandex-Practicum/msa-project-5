@@ -1,0 +1,9 @@
+customer_id,order_id,delivery_status,delivery_cost
+101,5001,delivered,12.50
+102,5002,in_transit,9.90
+103,5003,delivered,15.00
+104,5004,failed,7.40
+105,5005,delivered,11.20
+106,5006,in_transit,8.80
+107,5007,delivered,10.10
+108,5008,pending,6.50
