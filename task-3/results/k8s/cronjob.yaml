@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipment-events-export
+  namespace: logistics-export
+  labels:
+    app: events-exporter
+spec:
+  # Каждый день в 20:00 по Москве — выгрузка для дашбордов дневной отчётности
+  schedule: "0 20 * * *"
+  timeZone: "Europe/Moscow"
+  # Не допускаем параллельного выполнения двух выгрузок
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      # Максимум 1 час на выгрузку, 2 повторных попытки при сбое
+      activeDeadlineSeconds: 3600
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: events-exporter
+        spec:
+          restartPolicy: OnFailure
+          # Minikube создаёт каталоги PVC от root:root; отдаём том пользователю exporter (uid 999)
+          initContainers:
+          - name: fix-export-dir-permissions
+            image: busybox
+            command: ["sh", "-c", "chown -R 999:999 /export"]
+            volumeMounts:
+            - name: export-data
+              mountPath: /export
+          containers:
+          - name: exporter
+            image: events-exporter:1.0
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PGHOST
+              valueFrom:
+                configMapKeyRef:
+                  name: exporter-settings
+                  key: PGHOST
+            - name: PGPORT
+              valueFrom:
+                configMapKeyRef:
+                  name: exporter-settings
+                  key: PGPORT
+            - name: PGDATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: exporter-settings
+                  key: PGDATABASE
+            - name: EXPORT_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: exporter-settings
+                  key: EXPORT_DIR
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: exporter-db-credentials
+                  key: PGUSER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: exporter-db-credentials
+                  key: PGPASSWORD
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+            volumeMounts:
+            - name: export-data
+              mountPath: /export
+          volumes:
+          - name: export-data
+            persistentVolumeClaim:
+              claimName: export-data

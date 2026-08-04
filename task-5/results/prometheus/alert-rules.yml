@@ -1,0 +1,33 @@
+groups:
+  - name: etl-alerts
+    rules:
+      # 1. ETL-джоба завершилась ошибкой — ключевой бизнес-алерт:
+      # данные об остатках не загружены, клиенты видят устаревшую информацию.
+      - alert: EtlJobFailed
+        expr: increase(etl_job_runs_total{status="FAILED"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ETL-джоба завершилась со статусом FAILED"
+          description: "За последние 10 минут зафиксирован падший запуск джобы {{ $labels.job }}. Данные в products могут быть неактуальны."
+
+      # 2. Приложение недоступно — Prometheus не может собрать метрики.
+      - alert: BatchAppDown
+        expr: up{job="batch-processing"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Приложение batch-processing недоступно"
+          description: "Target app:8080/actuator/prometheus не отвечает больше минуты."
+
+      # 3. Давление на heap — при обработке больших отчётов предвестник OOM.
+      - alert: HighHeapUsage
+        expr: sum(jvm_memory_used_bytes{job="batch-processing", area="heap"}) / sum(jvm_memory_max_bytes{job="batch-processing", area="heap"}) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование heap в batch-processing"
+          description: "Heap занят более чем на 85% в течение 2 минут: {{ $value | humanizePercentage }}."

@@ -1,0 +1,47 @@
+@startuml c4-monitoring
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title C4 — Container: контур мониторинга, логирования и оповещения ETL (Task 5)
+
+Person(warehouseWorker, "Сотрудник склада", "Загружает CSV-отчёт об остатках")
+Person(operator, "DevOps / инженер сопровождения", "Следит за ETL, реагирует на алерты")
+
+' --- Контур приложения (как в Task 4) ---
+Container(erpUi, "ERP Frontend", "Angular, WebSockets", "Интерфейс загрузки отчётов и просмотра остатков")
+Container(monolith, "Монолит TradeWare", "Java, WildFly", "Остатки, перемещения, отчёты")
+Container(etlService, "ETL Batch Service", "Java 17, Spring Boot, Spring Batch", "Пакетная обработка CSV-отчётов; публикует метрики Micrometer на /actuator/prometheus; пишет JSON-логи в stdout и файл")
+ContainerDb(stockDb, "Products DB", "PostgreSQL", "products, loyality_data, метаданные джоб BATCH_*")
+
+' --- Добавленный в Task 5 контур наблюдаемости ---
+System_Boundary(obs, "Контур наблюдаемости (добавлено в Task 5)") {
+    Container(prometheus, "Prometheus", "prom/prometheus v3", "Собирает метрики (pull), вычисляет alert rules: EtlJobFailed, BatchAppDown, HighHeapUsage")
+    Container(grafana, "Grafana", "grafana/grafana 12", "Дашборд «ETL Batch Processing — Overview»")
+    Container(filebeat, "Filebeat", "Elastic Beats", "Читает JSON-логи приложения с общего volume (filestream + ndjson)")
+    Container(logstash, "Logstash", "Elastic", "Маршрутизация лог-событий в индексы")
+    ContainerDb(elastic, "Elasticsearch", "Elastic", "Индексация и хранение логов filebeat-*")
+    Container(kibana, "Kibana", "Elastic", "Поиск и просмотр логов")
+}
+
+' --- Потоки приложения ---
+Rel(warehouseWorker, erpUi, "Загружает CSV-отчёт", "HTTPS")
+Rel(erpUi, etlService, "Передаёт файл на обработку", "REST / запуск джобы")
+Rel(erpUi, monolith, "Читает остатки и историю", "REST")
+Rel(etlService, stockDb, "Читает loyality_data, пакетно пишет products", "JDBC")
+Rel(monolith, stockDb, "Читает products", "JDBC")
+
+' --- Потоки наблюдаемости ---
+Rel(prometheus, etlService, "Scrape метрик каждые 10 с", "HTTP /actuator/prometheus")
+Rel(grafana, prometheus, "Запросы PromQL для дашборда")
+Rel(filebeat, etlService, "Читает файл логов с общего volume")
+Rel(filebeat, logstash, "Пересылает события", "Beats/5044")
+Rel(logstash, elastic, "Индексирует события", "HTTP/9200")
+Rel(kibana, elastic, "Поиск по индексам")
+
+Rel(operator, grafana, "Смотрит дашборд", "HTTPS :3000")
+Rel(operator, kibana, "Разбирает логи", "HTTPS :5601")
+Rel(prometheus, operator, "Алерты (в проде — через Alertmanager)", "webhook")
+
+@enduml

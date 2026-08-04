@@ -1,0 +1,21 @@
+filebeat.inputs:
+  # Приложение пишет JSON-логи в файл на общем volume (см. docker-compose.yml).
+  # filestream + ndjson-парсер раскладывают каждую строку в поля события.
+  - type: filestream
+    id: etl-app-json-logs
+    enabled: true
+    paths:
+      - /usr/share/etl-logs/*.json
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+    fields:
+      log_source: etl-app
+    fields_under_root: true
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+logging.level: info
+logging.to_stderr: true

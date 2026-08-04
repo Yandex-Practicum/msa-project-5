@@ -1,0 +1,21 @@
+@startuml c4-context
+!include <C4/C4_Context>
+
+LAYOUT_WITH_LEGEND()
+
+title C4 — System Context: обработка складских отчётов TradeWare
+
+Person(warehouseWorker, "Сотрудник склада", "Формирует отчёт об остатках по Excel-шаблону, загружает CSV в конце смены")
+Person(manager, "Менеджер / партнёр", "Работает с актуальными остатками, скидками и промоакциями")
+
+System(tradeware, "Система управления складскими остатками TradeWare", "Приём и пакетная обработка CSV-отчётов (ETL на Spring Batch), актуальные остатки, история перемещений, отчётность для внутренних пользователей и партнёров")
+
+System_Ext(gcs, "Google Cloud Storage", "Облачное файловое хранилище загруженных CSV-отчётов")
+System_Ext(partners, "Системы логистических партнёров и региональных складов", "Передают файлы отчётов и запрашивают данные по API")
+
+Rel(warehouseWorker, tradeware, "Загружает CSV-отчёт, получает уведомление о результате", "HTTPS")
+Rel(manager, tradeware, "Просматривает остатки и аналитику", "HTTPS")
+Rel(partners, tradeware, "Отчёты и запросы остатков", "REST API / файлы")
+Rel(tradeware, gcs, "Сохраняет и читает файлы отчётов", "HTTPS")
+
+@enduml

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exporter-settings
+  namespace: logistics-export
+data:
+  PGHOST: "postgres"
+  PGPORT: "5432"
+  PGDATABASE: "cargo_ops"
+  EXPORT_DIR: "/export"

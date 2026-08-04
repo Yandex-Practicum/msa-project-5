@@ -1,0 +1,43 @@
+version: '3.8'
+
+# Локальная проверка экспортера без Kubernetes:
+#   docker compose up --build
+# CSV-файл появится в каталоге ./export
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: cargo_ops_db
+    environment:
+      POSTGRES_DB: cargo_ops
+      POSTGRES_USER: exporter
+      POSTGRES_PASSWORD: exporter_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U exporter -d cargo_ops"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  events-exporter:
+    build: .
+    container_name: events_exporter
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: cargo_ops
+      PGUSER: exporter
+      PGPASSWORD: exporter_secret
+      EXPORT_DIR: /export
+    volumes:
+      - ./export:/export
+
+volumes:
+  pg_data:
