@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Context>
+
+title Task 2. C4 System Context — To Be
+
+LAYOUT_LEFT_RIGHT()
+
+Person(b2bClient, "B2B-клиент", "Получает индивидуальный CSV/XLS-прайс-лист")
+
+System(priceListGenerator, "Модуль генерации прайс-листов", "Ежедневно формирует индивидуальные прайс-листы для B2B-клиентов")
+
+System_Ext(onlineStore, "Интернет-магазин", "Хранит актуальные товары, категории, клиентов и индивидуальные цены")
+System_Ext(fileStorage, "Хранилище прайс-листов", "Хранит сформированные CSV/XLS-файлы")
+
+Rel(priceListGenerator, onlineStore, "Читает данные для прайс-листов", "read-only SQL")
+Rel(priceListGenerator, fileStorage, "Сохраняет прайс-листы", "CSV/XLS")
+Rel(b2bClient, fileStorage, "Получает свой прайс-лист")
+
+@enduml
