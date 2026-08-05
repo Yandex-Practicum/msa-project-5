@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shipment-export
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shipment-export-db
+  namespace: shipment-export
+type: Opaque
+stringData:
+  DB_PASSWORD: demo-password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipment-export-config
+  namespace: shipment-export
+data:
+  DB_NAME: logistics
+  DB_USER: exporter
+  DB_URL: jdbc:postgresql://shipment-db:5432/logistics
+  OUTPUT_DIR: /data/exports
+  EXPORT_TIME_ZONE: Europe/Moscow
+  DB_FETCH_SIZE: "1000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipment-db-init
+  namespace: shipment-export
+data:
+  01-init.sql: |
+    CREATE TABLE shipments (
+        id BIGSERIAL PRIMARY KEY,
+        tracking_number VARCHAR(32) NOT NULL UNIQUE,
+        status VARCHAR(32) NOT NULL,
+        driver_id BIGINT,
+        vehicle_id BIGINT,
+        client_id BIGINT NOT NULL,
+        shipment_date DATE NOT NULL,
+        destination VARCHAR(255) NOT NULL
+    );
+
+    INSERT INTO shipments (
+        tracking_number,
+        status,
+        driver_id,
+        vehicle_id,
+        client_id,
+        shipment_date,
+        destination
+    )
+    SELECT
+        'SHP-' || LPAD(number::text, 5, '0'),
+        (ARRAY['CREATED', 'IN_TRANSIT', 'DELIVERED'])[(number % 3) + 1],
+        1000 + number,
+        200 + number,
+        5000 + number,
+        (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Moscow')::date,
+        'Warehouse ' || number
+    FROM generate_series(1, 12) AS number;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shipment-db-data
+  namespace: shipment-export
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipment-db
+  namespace: shipment-export
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shipment-db
+  template:
+    metadata:
+      labels:
+        app: shipment-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: shipment-export-config
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shipment-export-config
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shipment-export-db
+                  key: DB_PASSWORD
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: database-data
+              mountPath: /var/lib/postgresql/data
+            - name: database-init
+              mountPath: /docker-entrypoint-initdb.d/01-init.sql
+              subPath: 01-init.sql
+              readOnly: true
+      volumes:
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: shipment-db-data
+        - name: database-init
+          configMap:
+            name: shipment-db-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipment-db
+  namespace: shipment-export
+spec:
+  selector:
+    app: shipment-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shipment-export-data
+  namespace: shipment-export
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi

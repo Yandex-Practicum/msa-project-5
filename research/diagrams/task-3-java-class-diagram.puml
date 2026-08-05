@@ -1,0 +1,46 @@
+@startuml
+title Task 3. Диаграмма классов Java-реализации
+
+skinparam classAttributeIconSize 0
+hide empty members
+set namespaceSeparator none
+
+package "com.example.shipmentexporter" {
+  class ShipmentExportApplication {
+    + {static} main(args: String[]): void
+    ~ {static} run(): int
+  }
+
+  class ExportSettings <<record>> {
+    - dbUrl: String
+    - dbUser: String
+    - dbPassword: String
+    - outputDirectory: Path
+    - timeZone: ZoneId
+    - fetchSize: int
+    ~ {static} fromEnvironment(): ExportSettings
+    ~ {static} from(environment: Map<String, String>): ExportSettings
+  }
+
+  class ShipmentCsvExporter {
+    - {static} EXPORT_QUERY: String
+    ~ export(connection: Connection, outputDirectory: Path,
+      exportDate: LocalDate, fetchSize: int): ExportResult
+  }
+
+  class ExportResult <<record>> {
+    - outputFile: Path
+    - rowCount: long
+  }
+
+  class CsvWriter {
+    ~ {static} writeRecord(writer: Writer, values: List<String>): void
+  }
+
+  ShipmentExportApplication ..> ExportSettings : читает настройки
+  ShipmentExportApplication ..> ShipmentCsvExporter : запускает экспорт
+  ShipmentCsvExporter ..> CsvWriter : записывает CSV
+  ShipmentCsvExporter *-- ExportResult : возвращает
+}
+
+@enduml

@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipment-export
+  namespace: shipment-export
+spec:
+  schedule: "0 20 * * *"
+  timeZone: Europe/Moscow
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: shipment-export
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: shipment-exporter
+              image: shipment-exporter:local
+              imagePullPolicy: Never
+              envFrom:
+                - configMapRef:
+                    name: shipment-export-config
+                - secretRef:
+                    name: shipment-export-db
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: export-data
+                  mountPath: /data/exports
+                - name: temporary-data
+                  mountPath: /tmp
+          volumes:
+            - name: export-data
+              persistentVolumeClaim:
+                claimName: shipment-export-data
+            - name: temporary-data
+              emptyDir: {}
