@@ -1,0 +1,37 @@
+name: msa-project-5-task-4
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: productsdb
+      POSTGRES_USER: products
+      POSTGRES_PASSWORD: products-password
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U products -d productsdb"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - products-db-data:/var/lib/postgresql/data
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/loyality_data.csv:/docker-entrypoint-initdb.d/loyality_data.csv:ro
+
+  app:
+    image: tradeware-batch-processing:local
+    build:
+      context: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/productsdb
+      DB_USER: products
+      DB_PASSWORD: products-password
+      BATCH_CHUNK_SIZE: "500"
+    restart: "no"
+
+volumes:
+  products-db-data:

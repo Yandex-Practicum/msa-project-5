@@ -1,0 +1,48 @@
+@startuml
+title Task 4. Диаграмма классов Java-реализации
+
+skinparam classAttributeIconSize 0
+hide empty members
+set namespaceSeparator none
+
+package "com.example.batchprocessing" {
+  class BatchProcessingApplication {
+    + {static} main(args: String[]): void
+  }
+
+  class BatchConfiguration <<configuration>> {
+    + reader(inputResource: Resource): FlatFileItemReader<Product>
+    + processor(jdbcTemplate: JdbcTemplate): ProductItemProcessor
+    + writer(dataSource: DataSource): JdbcBatchItemWriter<Product>
+    + importProductJob(...): Job
+    + importProductsStep(...): Step
+  }
+
+  class Product <<record>> {
+    - productId: Long
+    - productSku: Long
+    - productName: String
+    - productAmount: Long
+    - productData: String
+  }
+
+  class ProductItemProcessor {
+    - jdbcTemplate: JdbcTemplate
+    - loyaltyBySku: Map<Long, String>
+    + process(product: Product): Product
+    - loadLoyaltyData(): Map<Long, String>
+  }
+
+  class JobCompletionNotificationListener {
+    - jdbcTemplate: JdbcTemplate
+    + afterJob(jobExecution: JobExecution): void
+  }
+
+  BatchProcessingApplication ..> BatchConfiguration : запускает Spring context
+  BatchConfiguration ..> ProductItemProcessor : создаёт processor
+  BatchConfiguration ..> Product : настраивает reader и writer
+  BatchConfiguration ..> JobCompletionNotificationListener : подключает к Job
+  ProductItemProcessor ..> Product : обогащает
+}
+
+@enduml

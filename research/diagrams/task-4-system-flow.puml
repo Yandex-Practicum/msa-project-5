@@ -1,0 +1,94 @@
+@startuml
+title Task 4. Полный процесс Spring Batch ETL
+
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+autonumber
+
+actor "Разработчик" as developer
+participant "Docker Compose" as compose
+database "PostgreSQL\nproductsdb" as database
+participant "Spring Boot\nBatchProcessingApplication" as app
+control "Spring Batch\nimportProductJob" as job
+participant "FlatFileItemReader" as reader
+collections "product-data.csv" as inputCsv
+participant "ProductItemProcessor" as processor
+participant "JdbcBatchItemWriter" as writer
+
+developer -> compose : docker compose build app
+compose -> compose : Gradle создаёт batch-processing.jar
+
+note over developer, compose
+  **task-4/results/Dockerfile**
+  1. Gradle + JDK собирают JAR
+  2. JAR переносится в JRE-образ
+  3. Контейнер запускается не от root
+end note
+
+developer -> compose : docker compose up postgres
+compose -> database : Запускает и ожидает healthcheck
+activate database
+database -> database : schema-all.sql создаёт таблицы
+database -> database : COPY загружает loyality_data.csv
+deactivate database
+
+note over compose, database
+  **task-4/results/docker-compose.yml**
+  postgres: PostgreSQL 16, healthcheck и volume
+  init mounts: schema-all.sql и loyality_data.csv
+  app env: DB_URL, DB_USER, DB_PASSWORD,
+  BATCH_CHUNK_SIZE=500
+end note
+
+developer -> compose : docker compose run app
+compose -> app : Запускает контейнер с app.jar
+activate app
+app -> database : Создаёт Spring Batch metadata BATCH_*
+app -> job : Запускает Job с новым run.id
+activate job
+
+note over app, job
+  **application.properties + BatchConfiguration**
+  input: classpath:product-data.csv
+  chunk-size: 500
+  retry: до 3 попыток для временной ошибки БД
+  Job Repository: PostgreSQL
+end note
+
+job -> reader : Открывает Reader
+loop Для каждой строки CSV
+  reader -> inputCsv : Читает следующую строку
+  inputCsv --> reader : Product
+  reader --> job : Product
+
+  job -> processor : process(Product)
+  alt Справочник ещё не загружен
+    processor -> database : SELECT product_sku, loyality_data
+    database --> processor : Map из 4 записей
+  end
+  processor --> job : Обогащённый Product
+end
+
+job -> writer : Передаёт chunk
+activate writer
+writer -> database : Batch UPSERT в products
+database --> writer : 5 строк записано
+deactivate writer
+job -> database : Фиксирует состояние Job и Step в BATCH_*
+job -> database : Listener выполняет COUNT(products)
+database --> job : products=5
+job --> app : COMPLETED; read=5, written=5, skipped=0
+deactivate job
+app --> compose : exit code 0
+deactivate app
+
+developer -> database : SELECT FROM products
+database --> developer : 5 обогащённых товаров
+
+note over job, writer
+  Структура Java-кода показана отдельно:
+  **task-4-java-class-diagram.puml**
+end note
+
+@enduml

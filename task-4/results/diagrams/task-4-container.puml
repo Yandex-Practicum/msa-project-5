@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Container>
+
+title Task 4.1. C4 Container — ETL на Spring Batch
+
+LAYOUT_LEFT_RIGHT()
+
+Person(employee, "Сотрудник склада", "Загружает отчёт и получает результат")
+System_Ext(erp, "ERP / монолит TradeWare", "Проверяет CSV и управляет загрузкой")
+System_Ext(gcs, "Google Cloud Storage", "Хранит CSV-файлы")
+SystemDb_Ext(productDb, "БД номенклатуры", "PostgreSQL: таблицы loyality_data и products")
+
+System_Boundary(etl, "ETL обработки отчётов") {
+    Container(coordinator, "Координатор импорта", "Java, Spring Boot", "Принимает fileId, создаёт задание и возвращает статус")
+    Container(queue, "Очередь заданий", "Google Pub/Sub", "Сглаживает пики и отделяет загрузку от обработки")
+    Container(worker, "Spring Batch Worker", "Java, Spring Batch", "Reader → Processor → Writer; выполняет Job для одного файла")
+    ContainerDb(jobRepository, "Job Repository", "PostgreSQL, schema batch", "Хранит BATCH_* metadata, параметры и прогресс Job")
+}
+
+Rel(employee, erp, "Загружает CSV и смотрит статус", "HTTPS")
+Rel(erp, gcs, "Сохраняет CSV", "GCS API")
+Rel(erp, coordinator, "Передаёт fileId и запрашивает статус", "HTTPS / JSON")
+Rel(coordinator, queue, "Публикует задание", "Pub/Sub")
+Rel(coordinator, jobRepository, "Читает статус Job", "JDBC")
+Rel(worker, queue, "Получает задание", "Pub/Sub")
+Rel(worker, gcs, "Потоково читает CSV", "GCS API")
+Rel(worker, productDb, "Читает loyality_data; batch upsert в products", "JDBC")
+Rel(worker, jobRepository, "Сохраняет состояние Job и Step", "JDBC")
+
+@enduml
