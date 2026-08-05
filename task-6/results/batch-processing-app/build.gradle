@@ -1,0 +1,39 @@
+plugins {
+	id 'org.springframework.boot' version '3.5.3'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+//	runtimeOnly 'org.hsqldb:hsqldb'
+	implementation("org.postgresql:postgresql:42.2.5")
+
+	// actuator + web: без них /actuator/prometheus не существует (actuator не на classpath)
+	// и нет embedded-сервера, который держал бы процесс живым для скрейпа метрик
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// otel, а не brave: OTel-мост говорит W3C traceparent "из коробки" — тем же форматом,
+	// что и .NET-клиент (import-job-client) — так traceId клиента и сервера совпадут в одну трассировку
+	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+	implementation "net.logstash.logback:logstash-logback-encoder:8.1"
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.batch:spring-batch-test'
+}
+
+test {
+	useJUnitPlatform()
+
+}

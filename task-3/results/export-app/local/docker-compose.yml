@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: shipments
+      POSTGRES_PASSWORD: shipments
+      POSTGRES_DB: shipments
+    ports:
+      - "5438:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "shipments"]
+      interval: 5s
+      retries: 5

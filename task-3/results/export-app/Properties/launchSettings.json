@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "ExportApp": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "EXPORT_DB_CONNECTION": "Host=localhost;Port=5438;Database=shipments;Username=shipments;Password=shipments;Gss Encryption Mode=Disable",
+        "EXPORT_OUTPUT_PATH": "./output/shipments.csv"
+      }
+    }
+  }
+}

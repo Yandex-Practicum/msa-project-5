@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: export-output
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipments-export
+spec:
+  schedule: "0 20 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: export
+              image: shipments-export:local
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - secretRef:
+                    name: export-db-credentials
+              env:
+                - name: EXPORT_OUTPUT_PATH
+                  value: /export/shipments.csv
+              volumeMounts:
+                - name: export-output
+                  mountPath: /export
+          volumes:
+            - name: export-output
+              persistentVolumeClaim:
+                claimName: export-output

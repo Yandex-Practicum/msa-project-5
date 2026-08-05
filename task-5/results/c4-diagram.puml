@@ -1,0 +1,55 @@
+@startuml c4-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title C4 TradeWare, To Be (Spring Batch ETL + мониторинг/логирование/оповещение)
+
+Person(employee, "Сотрудник склада", "Использует веб-приложение загрузки отчётов")
+Person(analyst, "Отдел аналитики и отчётности")
+Person(partner, "Логистический партнёр / региональный склад")
+Person(devops, "Дежурный инженер / DevOps", "Следит за дашбордами, получает алерты, ищет причину сбоев в логах")
+
+System_Boundary(backend, "Backend, GCP Compute Engine") {
+    Container(webapp, "Web-интерфейс", "JS, Angular", "Приложение для пользователя, загрузка CSV-отчёта")
+    Container(erp_app, "ERP-приложение", "WildFly/Java", "Валидация формата, сохранение файла отчёта, партнёрский REST API, чтение остатков")
+    Container(batch_job, "ETL-обработка отчёта", "Java, Spring Batch", "Chunk-обработка: читает CSV, обогащает справочными данными, пишет остатки пакетно. Retry/restart через JobRepository. Отдаёт метрики и структурированные логи")
+}
+
+ContainerDb(nomenclature_db, "БД номенклатуры", "PostgreSQL, GCP", "Актуальные данные о наличии товаров на складах")
+ContainerDb(reference_db, "БД справочных данных о товарах", "PostgreSQL, GCP", "Характеристики товаров, промоакции и т.д.")
+ContainerDb(file_storage, "Файловое хранилище", "Google Cloud Storage", "Загруженные файлы отчётов")
+
+System_Boundary(observability, "Мониторинг и логирование") {
+    Container(prometheus, "Prometheus", "Prometheus", "Скрейпит метрики по HTTP, хранит временные ряды, оценивает alert-правила")
+    Container(grafana, "Grafana", "Grafana", "Дашборды по метрикам, Grafana Alerting — уведомления по метрикам")
+    Container(filebeat, "Filebeat", "Filebeat", "Читает JSON-логи контейнеров из Docker log driver")
+    Container(logstash, "Logstash", "Logstash", "Принимает логи от Filebeat, пишет в Elasticsearch")
+    ContainerDb(elasticsearch, "Elasticsearch", "Elasticsearch", "Хранит и индексирует логи")
+    Container(kibana, "Kibana", "Kibana", "Поиск и просмотр логов (Discover)")
+}
+
+Rel(employee, webapp, "Использует", "HTTPS")
+Rel(webapp, erp_app, "Загружает CSV-отчёт", "REST API JSON/HTTP")
+Rel(erp_app, file_storage, "Сохраняет загруженный файл отчёта", "Storage API")
+Rel(erp_app, batch_job, "Запускает Job после сохранения файла", "внутренний вызов")
+Rel(batch_job, file_storage, "Читает CSV-файл отчёта чанками", "Storage API")
+Rel(batch_job, reference_db, "Обогащает чанк справочными данными", "JDBC")
+Rel(batch_job, nomenclature_db, "Пишет обновлённые остатки пакетно (batch insert/update)", "JDBC")
+Rel(batch_job, erp_app, "Статус завершения Job (успех/ошибка)", "JobExecutionListener")
+Rel(erp_app, employee, "Уведомление о результате обработки", "HTTP response")
+Rel(analyst, erp_app, "Запрашивает отчётность по остаткам", "REST API")
+Rel(erp_app, nomenclature_db, "Читает остатки для отчётности и партнёрского API", "JDBC")
+Rel(partner, erp_app, "Запрашивает остатки, логистические операции", "REST API")
+
+Rel(prometheus, batch_job, "Скрейпит метрики каждые 5с", "HTTP, /actuator/prometheus")
+Rel(grafana, prometheus, "Источник данных для дашбордов и алертов", "PromQL")
+Rel(batch_job, filebeat, "Структурированные JSON-логи (stdout)", "Docker log driver")
+Rel(filebeat, logstash, "Пересылает логи", "Beats protocol, порт 5044")
+Rel(logstash, elasticsearch, "Индексирует логи", "HTTP")
+Rel(kibana, elasticsearch, "Запрашивает логи для поиска/просмотра", "HTTP")
+Rel(devops, grafana, "Смотрит дашборды, получает алерты", "HTTPS")
+Rel(devops, kibana, "Ищет по логам при инцидентах", "HTTPS")
+
+@enduml

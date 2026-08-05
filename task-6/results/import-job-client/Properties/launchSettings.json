@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ImportJobClient": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "JOB_ENDPOINT": "http://localhost:8080/jobs/import-product"
+      }
+    }
+  }
+}

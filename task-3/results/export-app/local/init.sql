@@ -1,0 +1,15 @@
+CREATE TABLE shipments (
+    id SERIAL PRIMARY KEY,
+    client_id INT NOT NULL,
+    driver_id INT NOT NULL,
+    vehicle_id INT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+INSERT INTO shipments (client_id, driver_id, vehicle_id, status, created_at) VALUES
+    (101, 11, 501, 'delivered', now() - interval '2 days'),
+    (102, 12, 502, 'in_transit', now() - interval '1 days'),
+    (103, 11, 503, 'delivered', now() - interval '3 hours'),
+    (104, 13, 501, 'pending', now() - interval '1 hours'),
+    (105, 12, 504, 'delivered', now());
