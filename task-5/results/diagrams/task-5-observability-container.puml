@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Container>
+
+title Task 5.1. C4 Container — мониторинг и логирование
+
+LAYOUT_LEFT_RIGHT()
+
+Person(operator, "DevOps / поддержка", "Контролирует Job, метрики, alerts и ошибки")
+
+System_Boundary(batch, "Spring Batch ETL") {
+    Container(app, "Batch Processing", "Java, Spring Boot, Spring Batch", "Запускает ETL и отдаёт метрики через Actuator")
+    ContainerDb(database, "Product и Job Repository", "PostgreSQL", "Хранит products, loyality_data и BATCH_* metadata")
+}
+
+System_Boundary(metrics, "Мониторинг и оповещения") {
+    Container(prometheus, "Prometheus", "Prometheus", "Собирает и хранит метрики приложения")
+    Container(grafana, "Grafana", "Grafana", "Показывает dashboard и рассчитывает alert rules")
+}
+
+System_Boundary(logging, "Централизованное логирование") {
+    Container(filebeat, "Filebeat", "Elastic Beats", "Читает JSON stdout контейнера app")
+    Container(logstash, "Logstash", "Elastic Stack", "Проверяет и обогащает события")
+    ContainerDb(elasticsearch, "Elasticsearch", "Elastic Stack", "Хранит индексированные логи")
+    Container(kibana, "Kibana", "Elastic Stack", "Ищет и визуализирует логи")
+}
+
+Rel(app, database, "Читает справочник, записывает товары и состояние Job", "JDBC")
+
+Rel(prometheus, app, "Собирает метрики", "GET /actuator/prometheus")
+Rel(grafana, prometheus, "Запрашивает метрики", "PromQL")
+Rel(operator, grafana, "Смотрит dashboard и alerts", "HTTP")
+Rel(grafana, operator, "Показывает Pending / Firing")
+
+Rel(filebeat, app, "Читает JSON-логи", "Docker logs")
+Rel(filebeat, logstash, "Передаёт события", "Beats protocol")
+Rel(logstash, elasticsearch, "Индексирует логи", "HTTP")
+Rel(kibana, elasticsearch, "Выполняет поиск", "HTTP")
+Rel(operator, kibana, "Исследует Job и ошибки", "HTTP")
+
+@enduml

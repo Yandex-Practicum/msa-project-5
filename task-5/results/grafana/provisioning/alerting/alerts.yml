@@ -1,0 +1,165 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Batch Processing
+    folder: Batch Processing
+    interval: 1m
+    rules:
+      - uid: batch-job-failed
+        title: BatchJobFailed
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: sum(increase(batch_job_executions_total{job_name="importProductJob",status="FAILED"}[5m]))
+              instant: true
+              intervalMs: 1000
+              legendFormat: failed
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions: []
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: ""
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        dashboardUid: batch-processing
+        panelId: 1
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          description: Spring Batch Job завершился с ошибкой за последние 5 минут.
+          summary: Ошибка importProductJob
+        labels:
+          severity: critical
+        isPaused: false
+
+      - uid: batch-job-slow
+        title: BatchJobSlow
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: max(batch_job_duration_seconds_max{job_name="importProductJob"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: duration
+              maxDataPoints: 43200
+              range: false
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions: []
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: ""
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 30
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        dashboardUid: batch-processing
+        panelId: 2
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          description: Длительность importProductJob превысила 30 секунд.
+          summary: Медленное выполнение importProductJob
+        labels:
+          severity: warning
+        isPaused: false
