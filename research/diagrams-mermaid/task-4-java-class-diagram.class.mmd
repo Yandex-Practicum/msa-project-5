@@ -1,0 +1,86 @@
+---
+config:
+  theme: base
+  themeCSS: |
+    text, tspan, .label, .label *, .nodeLabel, .nodeLabel *, .classTitle, .classText, .edgeLabel, .edgeLabel *, .cluster-label, .cluster-label *, foreignObject * {
+      color: #000000 !important;
+      fill: #000000 !important;
+      opacity: 1 !important;
+    }
+    .label, .nodeLabel, .edgeLabel, .cluster-label {
+      font-weight: 500 !important;
+    }
+    .classTitle {
+      font-weight: 700 !important;
+    }
+    .relation, .flowchart-link {
+      stroke: #111827 !important;
+      opacity: 1 !important;
+    }
+  themeVariables:
+    darkMode: false
+    background: "#ffffff"
+    primaryColor: "#f8fafc"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#1f2937"
+    secondaryColor: "#eef6ff"
+    secondaryTextColor: "#000000"
+    secondaryBorderColor: "#374151"
+    tertiaryColor: "#ffffff"
+    tertiaryTextColor: "#000000"
+    tertiaryBorderColor: "#4b5563"
+    lineColor: "#111827"
+    textColor: "#000000"
+    mainBkg: "#f8fafc"
+    secondBkg: "#eef2ff"
+    classText: "#000000"
+    nodeBorder: "#1f2937"
+    clusterBkg: "#ffffff"
+    clusterBorder: "#4b5563"
+    edgeLabelBackground: "#ffffff"
+    titleColor: "#000000"
+---
+classDiagram
+direction LR
+
+namespace `Task 4 — Диаграмма классов Java-реализации — com_example_batchprocessing` {
+  class BatchProcessingApplication {
+    +main(args String[]) void$
+  }
+
+  class BatchConfiguration {
+    <<configuration>>
+    +reader(inputResource Resource) FlatFileItemReader~Product~
+    +processor(jdbcTemplate JdbcTemplate) ProductItemProcessor
+    +writer(dataSource DataSource) JdbcBatchItemWriter~Product~
+    +importProductJob(...) Job
+    +importProductsStep(...) Step
+  }
+
+  class Product {
+    <<record>>
+    -Long productId
+    -Long productSku
+    -String productName
+    -Long productAmount
+    -String productData
+  }
+
+  class ProductItemProcessor {
+    -JdbcTemplate jdbcTemplate
+    -Map~Long, String~ loyaltyBySku
+    +process(product Product) Product
+    -loadLoyaltyData() Map~Long, String~
+  }
+
+  class JobCompletionNotificationListener {
+    -JdbcTemplate jdbcTemplate
+    +afterJob(jobExecution JobExecution) void
+  }
+}
+
+BatchProcessingApplication ..> BatchConfiguration : запускает Spring context
+BatchConfiguration ..> ProductItemProcessor : создаёт processor
+BatchConfiguration ..> Product : настраивает reader и writer
+BatchConfiguration ..> JobCompletionNotificationListener : подключает к Job
+ProductItemProcessor ..> Product : обогащает

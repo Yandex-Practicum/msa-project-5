@@ -1,0 +1,77 @@
+---
+config:
+  theme: base
+  themeCSS: |
+    text, tspan, .label, .label *, .nodeLabel, .nodeLabel *, .classTitle, .classText, .edgeLabel, .edgeLabel *, .cluster-label, .cluster-label *, foreignObject * {
+      color: #000000 !important;
+      fill: #000000 !important;
+      opacity: 1 !important;
+    }
+    .label, .nodeLabel, .edgeLabel, .cluster-label {
+      font-weight: 500 !important;
+    }
+    .classTitle {
+      font-weight: 700 !important;
+    }
+    .relation, .flowchart-link {
+      stroke: #111827 !important;
+      opacity: 1 !important;
+    }
+  themeVariables:
+    darkMode: false
+    background: "#ffffff"
+    primaryColor: "#f8fafc"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#1f2937"
+    secondaryColor: "#eef6ff"
+    secondaryTextColor: "#000000"
+    secondaryBorderColor: "#374151"
+    tertiaryColor: "#ffffff"
+    tertiaryTextColor: "#000000"
+    tertiaryBorderColor: "#4b5563"
+    lineColor: "#111827"
+    textColor: "#000000"
+    actorBkg: "#fff2cc"
+    actorBorder: "#d6b656"
+    actorTextColor: "#000000"
+    signalColor: "#111827"
+    signalTextColor: "#000000"
+    noteBkgColor: "#fffde7"
+    noteBorderColor: "#9e9e9e"
+    noteTextColor: "#000000"
+---
+sequenceDiagram
+  autonumber
+  actor Client as Java client
+  participant Trace as Spring MVC tracing
+  participant API as JobLaunchController
+  participant Job as Spring Batch Job
+  participant DB as PostgreSQL
+  participant Log as JSON stdout
+  participant ELK as Filebeat → Logstash → Elasticsearch
+  actor User as Разработчик
+
+  Client->>Trace: POST /api/v1/jobs/import-products<br/>traceparent: 00-{traceId}-{parentSpanId}-01
+  activate Trace
+  Trace->>Trace: Извлечь traceId<br/>создать server spanId
+  Trace->>API: Вызов в trace scope
+  API->>Job: run(requestId)
+  activate Job
+  Job->>Log: JOB_STARTED + traceId + spanId
+  Job->>DB: Read loyalty / batch upsert products
+  DB-->>Job: Result
+  Job->>Log: STEP_COMPLETED + traceId + spanId
+  Job->>Log: JOB_COMPLETED + traceId + spanId
+  Job-->>API: JobExecution(COMPLETED)
+  deactivate Job
+  API-->>Trace: jobExecutionId + status + traceId
+  Trace->>Log: HTTP_REQUEST + traceId + spanId + uri
+  Trace-->>Client: HTTP 200 + JSON
+  deactivate Trace
+
+  Log->>ELK: Асинхронная доставка событий
+  User->>ELK: Поиск всех событий по traceId
+  ELK-->>User: HTTP_REQUEST и события Job одного запуска
+
+  Note over Client,Trace: W3C traceparent связывает клиента и серверный запрос
+  Note over Trace,Log: MDC автоматически добавляет traceId и spanId в JSON
