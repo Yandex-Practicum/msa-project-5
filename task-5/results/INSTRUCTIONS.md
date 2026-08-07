@@ -15,9 +15,9 @@ docker compose -f task-5/results/docker-compose.yml ps
 Дождитесь запуска всех сервисов. Spring Batch должен завершить Job, а контейнер `app` — остаться в состоянии `Up`:
 
 ```bash
-docker compose -f task-5/results/docker-compose.yml logs app | grep -E 'JOB_COMPLETED|JOB_FAILED'
+docker compose -f task-5/results/docker-compose.yml logs app | rg 'JOB_COMPLETED|JOB_FAILED'
 curl http://localhost:18080/actuator/health
-curl http://localhost:18080/actuator/prometheus | grep batch_job
+curl http://localhost:18080/actuator/prometheus | rg batch_job
 ```
 
 ## 2. Grafana

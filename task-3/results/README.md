@@ -16,7 +16,4 @@ CSV сначала записывается во временный файл, а
 
 ## Демонстрация
 
-Скриншот `evidence/task-3-cronjob-export-result.png` показывает:
-
-- успешный Kubernetes Job и его логи;
-- созданный CSV-файл и первые строки выгруженных данных.
+![Результат Kubernetes CronJob](evidence/task-3-cronjob-export-result.png)

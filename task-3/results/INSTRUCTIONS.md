@@ -76,9 +76,7 @@ kubectl --context msa-project-5 -n shipment-export exec output-inspector -- \
   sh -c 'head -n 5 /data/exports/*.csv'
 ```
 
-Для отчёта сделайте скриншоты успешного Job с логами и результата двух последних команд.
-
-## 6. Очистка после демонстрации
+## 5. Очистка после демонстрации
 
 ```bash
 kubectl --context msa-project-5 delete namespace shipment-export

@@ -62,15 +62,7 @@ docker compose \
 - DAG получает статус `Failed`;
 - Mailpit получает письмо `FAILED`.
 
-## 4. Подготовить скриншоты
-
-Сохранить в `task-1/results/task-1.2-poc/evidence`:
-
-- список успешного и ошибочного запусков Airflow;
-- задачи успешного запуска, включая повторную попытку `retry_demo`;
-- уведомления `RETRY`, `SUCCESS` и `FAILED` в Mailpit.
-
-## 5. Остановить POC
+## 4. Остановить POC
 
 ```bash
 docker compose \

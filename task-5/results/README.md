@@ -82,7 +82,7 @@ Filebeat отделяет приложение от ELK и может продо
 - Grafana автоматически загружает dashboard и два alert rules.
 - Filebeat читает только логи контейнера `batch-processing` и передаёт их через Logstash в Elasticsearch.
 
-Команды запуска и подготовка скриншотов описаны в [INSTRUCTIONS.md](INSTRUCTIONS.md).
+Команды запуска и проверки описаны в [INSTRUCTIONS.md](INSTRUCTIONS.md).
 
 ## Демонстрация
 
