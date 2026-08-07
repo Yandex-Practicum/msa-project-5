@@ -1,0 +1,110 @@
+name: msa-project-5-task-6
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: productsdb
+      POSTGRES_USER: products
+      POSTGRES_PASSWORD: products-password
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U products -d productsdb"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - products-db-data:/var/lib/postgresql/data
+      - ./src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/loyality_data.csv:/docker-entrypoint-initdb.d/loyality_data.csv:ro
+
+  app:
+    container_name: batch-processing-traced
+    image: tradeware-batch-processing:task-6
+    build:
+      context: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/productsdb
+      DB_USER: products
+      DB_PASSWORD: products-password
+      BATCH_CHUNK_SIZE: "500"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9200/_cluster/health > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.28
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9600/_node/pipelines > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+    restart: unless-stopped
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.28
+    user: root
+    command: ["-e", "--strict.perms=false"]
+    environment:
+      DOCKER_API_VERSION: "1.44"
+    depends_on:
+      logstash:
+        condition: service_healthy
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat-data:/usr/share/filebeat/data
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.28
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    restart: unless-stopped
+
+volumes:
+  products-db-data:
+  elasticsearch-data:
+  filebeat-data:
