@@ -1,0 +1,53 @@
+@startuml c4-tracing
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title C4 — Container: API запуска ETL-джобы со сквозным трейсингом (Task 6)
+
+Person(warehouseWorker, "Сотрудник склада", "Загружает CSV-отчёт об остатках")
+Person(operator, "DevOps / инженер сопровождения", "Ищет запуск джобы по traceId в логах и трейсах")
+
+' --- Контур приложения (как в Task 4-5) ---
+Container(erpUi, "ERP Frontend", "Angular, WebSockets", "Интерфейс загрузки отчётов и просмотра остатков")
+Container(monolith, "Монолит TradeWare", "Java, WildFly", "Остатки, перемещения, отчёты")
+Container(etlService, "ETL Batch Service", "Java 17, Spring Boot, Spring Batch, Micrometer Tracing (Brave)", "REST API POST /api/etl/run запускает джобу (автозапуск отключён); спаны → Zipkin, JSON-логи с traceId/spanId/uri → stdout и файл")
+ContainerDb(stockDb, "Products DB", "PostgreSQL", "products, loyality_data, метаданные джоб BATCH_*")
+
+' --- Добавлено в Task 6 ---
+Container(client, "ETL Job Client", "Python, requests", "Вызывает API запуска джобы; генерирует traceId/spanId, передаёт их заголовком b3 (B3 propagation)")
+Container(zipkin, "Zipkin", "openzipkin/zipkin 3", "Приём и отображение трейсов")
+
+' --- Контур наблюдаемости (как в Task 5) ---
+System_Boundary(obs, "Контур наблюдаемости (Task 5)") {
+    Container(prometheus, "Prometheus", "prom/prometheus v3", "Сбор метрик, alert rules")
+    Container(grafana, "Grafana", "grafana/grafana 12", "Дашборды метрик")
+    Container(filebeat, "Filebeat", "Elastic Beats", "Читает JSON-логи приложения с общего volume (filestream + ndjson)")
+    Container(logstash, "Logstash", "Elastic", "Маршрутизация лог-событий")
+    ContainerDb(elastic, "Elasticsearch", "Elastic", "Индексы логов filebeat-*")
+    Container(kibana, "Kibana", "Elastic", "Поиск логов по traceId")
+}
+
+' --- Потоки приложения ---
+Rel(warehouseWorker, erpUi, "Загружает CSV-отчёт", "HTTPS")
+Rel(erpUi, etlService, "Передаёт файл на обработку", "REST")
+Rel(erpUi, monolith, "Читает остатки и историю", "REST")
+Rel(monolith, stockDb, "Читает products", "JDBC")
+Rel(client, etlService, "POST /api/etl/run с заголовком b3", "HTTP")
+Rel(etlService, stockDb, "Читает loyality_data, пакетно пишет products", "JDBC")
+
+' --- Трейсинг ---
+Rel(etlService, zipkin, "Отправка спанов (http + job + step)", "HTTP /api/v2/spans")
+Rel(operator, zipkin, "Смотрит трейсы", "UI :9411")
+
+' --- Наблюдаемость ---
+Rel(prometheus, etlService, "Scrape метрик", "HTTP /actuator/prometheus")
+Rel(grafana, prometheus, "Запросы PromQL")
+Rel(filebeat, etlService, "Читает файл логов с общего volume")
+Rel(filebeat, logstash, "Пересылает события", "Beats/5044")
+Rel(logstash, elastic, "Индексирует события", "HTTP/9200")
+Rel(kibana, elastic, "Поиск по индексам")
+Rel(operator, kibana, "Ищет логи по traceId", "UI :5601")
+
+@enduml

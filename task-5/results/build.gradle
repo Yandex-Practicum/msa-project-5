@@ -1,0 +1,37 @@
+plugins {
+	id 'org.springframework.boot' version '3.5.3'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	// Web + Actuator: эндпоинты /actuator/health и /actuator/prometheus,
+	// приложение остаётся запущенным после выполнения джобы
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	runtimeOnly 'org.postgresql:postgresql:42.7.4'
+
+	// Метрики в формате Prometheus
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+	// Структурированные JSON-логи в stdout для сбора Filebeat
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.batch:spring-batch-test'
+}
+
+test {
+	useJUnitPlatform()
+}

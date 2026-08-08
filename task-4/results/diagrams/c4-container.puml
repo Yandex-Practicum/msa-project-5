@@ -1,0 +1,31 @@
+@startuml c4-container
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title C4 — Container: система TradeWare с вынесенным ETL-компонентом (Spring Batch)
+
+Person(warehouseWorker, "Сотрудник склада", "Формирует отчёт об остатках по Excel-шаблону, загружает CSV в конце смены")
+Person(manager, "Менеджер / партнёр", "Смотрит актуальные остатки, скидки и промоакции")
+
+Container(erpUi, "ERP Frontend", "Angular, WebSockets", "Интерфейс загрузки отчётов и просмотра остатков")
+
+Container(etlService, "ETL Batch Service", "Java 17, Spring Boot, Spring Batch", "Валидирует CSV, читает файл чанками, обогащает позиции справочными данными, пакетно пишет в БД. POC данного задания")
+
+ContainerDb(stockDb, "Products DB", "PostgreSQL (Cloud SQL)", "Таблицы products, loyality_data; метаданные джоб BATCH_*")
+
+Container(reportStorage, "Файловое хранилище отчётов", "Google Cloud Storage", "Исходные CSV-отчёты складов")
+
+Container(monolith, "Монолит TradeWare", "Java, WildFly", "Остатки, перемещения, отчёты; постепенно освобождается от ETL-нагрузки")
+
+Rel(warehouseWorker, erpUi, "Загружает CSV-отчёт")
+Rel(erpUi, etlService, "Передаёт файл на обработку", "REST / запуск джобы")
+Rel(etlService, reportStorage, "Читает CSV-отчёт", "файл / classpath в POC")
+Rel(etlService, stockDb, "Читает loyality_data, пакетно пишет products (чанки по 100)", "JDBC")
+Rel(etlService, stockDb, "Фиксирует статус и историю запусков", "JDBC, BATCH_*")
+Rel(manager, erpUi, "Просматривает остатки")
+Rel(erpUi, monolith, "Читает актуальные остатки и историю", "REST")
+Rel(monolith, stockDb, "Читает products", "JDBC")
+
+@enduml

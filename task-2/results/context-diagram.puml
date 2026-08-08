@@ -1,0 +1,29 @@
+@startuml
+!include <C4/C4_Context>
+
+title Контекстная диаграмма C4: модуль пакетной генерации прайс-листов (To Be)
+
+!define DIRECTION top to bottom direction
+!define LAYOUT_WITH_LEGEND()
+
+Person(b2b_client, "B2B-клиент", "Получает персональный CSV/XLS прайс-лист")
+Person(data_engineer, "Дата-инженер", "Следит за запусками, перезапускает вручную")
+
+System_Boundary(cloud, "Облачная платформа (Kubernetes)") {
+    System(batch_module, "Price List Batch Module", "K8s CronJob: скрипт-экспортер прайс-листов, ежедневный запуск в 06:00")
+    SystemDb(postgres, "PostgreSQL", "Операционная БД магазина: products, categories, clients, client_prices")
+    System(monitoring, "Monitoring Stack", "Prometheus + Grafana: метрики и алерты")
+}
+
+System_Ext(object_storage, "Object Storage (S3)", "Хранилище готовых прайс-листов")
+System_Ext(notification, "Notification Service", "Email/Telegram-уведомления о статусе выгрузки")
+
+Rel(data_engineer, batch_module, "Проверяет и перезапускает Job-ы", "kubectl / K8s API")
+Rel(data_engineer, monitoring, "Смотрит метрики и алерты", "HTTPS (Grafana)")
+Rel(batch_module, postgres, "Читает данные (SQL JOIN)", "JDBC")
+Rel(batch_module, object_storage, "Публикует CSV/XLS", "S3 API")
+Rel(batch_module, notification, "Отправляет статус выполнения", "HTTP/SMTP")
+Rel(batch_module, monitoring, "Экспортирует метрики", "HTTP")
+Rel(b2b_client, object_storage, "Скачивает свой прайс-лист", "HTTPS")
+
+@enduml
