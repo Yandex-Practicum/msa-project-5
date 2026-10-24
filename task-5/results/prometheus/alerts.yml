@@ -1,0 +1,17 @@
+groups:
+  - name: batch
+    rules:
+      - alert: BatchAppDown
+        expr: up{job="batch-app"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Spring Batch application is unavailable
+      - alert: BatchJobFailed
+        expr: increase(batch_job_runs_total{status="FAILED"}[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: Spring Batch job failed

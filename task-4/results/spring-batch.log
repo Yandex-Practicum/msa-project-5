@@ -1,0 +1,24 @@
+app-1  | 
+app-1  |   .   ____          _            __ _ _
+app-1  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+app-1  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+app-1  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+app-1  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+app-1  |  =========|_|==============|___/=/_/_/_/
+app-1  | 
+app-1  |  :: Spring Boot ::                (v3.5.3)
+app-1  | 
+app-1  | 2026-10-24T13:05:36.093Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Starting BatchProcessingApplication v1.0.0 using Java 17.0.20 with PID 1 (/app/app.jar started by root in /app)
+app-1  | 2026-10-24T13:05:36.097Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : No active profile set, falling back to 1 default profile: "default"
+app-1  | 2026-10-24T13:05:36.707Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+app-1  | 2026-10-24T13:05:36.903Z  INFO 1 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7f92b990
+app-1  | 2026-10-24T13:05:36.904Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+app-1  | 2026-10-24T13:05:37.204Z  INFO 1 --- [           main] c.e.b.BatchProcessingApplication         : Started BatchProcessingApplication in 1.481 seconds (process running for 1.853)
+app-1  | 2026-10-24T13:05:37.209Z  INFO 1 --- [           main] o.s.b.a.b.JobLauncherApplicationRunner   : Running default command line with: []
+app-1  | 2026-10-24T13:05:37.258Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] launched with the following parameters: [{}]
+app-1  | 2026-10-24T13:05:37.290Z  INFO 1 --- [           main] o.s.batch.core.job.SimpleStepHandler     : Executing step: [importStep]
+app-1  | 2026-10-24T13:05:37.350Z  INFO 1 --- [           main] o.s.batch.core.step.AbstractStep         : Step: [importStep] executed in 58ms
+app-1  | 2026-10-24T13:05:37.363Z  INFO 1 --- [           main] c.e.b.JobCompletionNotificationListener  : ETL status=COMPLETED products=5
+app-1  | 2026-10-24T13:05:37.369Z  INFO 1 --- [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=importProductJob]] completed with the following parameters: [{}] and the following status: [COMPLETED] in 96ms
+app-1  | 2026-10-24T13:05:37.373Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+app-1  | 2026-10-24T13:05:37.396Z  INFO 1 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

@@ -1,0 +1,33 @@
+{
+  "title": "Spring Batch ETL",
+  "uid": "batch-etl",
+  "schemaVersion": 40,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Доступность приложения",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "up{job=\"batch-app\"}"}],
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "Выполнения ETL",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "sum(batch_job_runs_total{status=\"COMPLETED\"})"}],
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "Длительность ETL, секунды",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "batch_job_duration_seconds_sum / batch_job_duration_seconds_count"}],
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+    }
+  ]
+}

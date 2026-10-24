@@ -1,0 +1,14 @@
+@startuml
+top to bottom direction
+skinparam defaultFontName DejaVu Sans
+skinparam rectangleBackgroundColor #E8F2FC
+skinparam rectangleBorderColor #2465A3
+title C4: формирование прайс-листов для B2B
+actor "B2B-клиент\nПолучает персональный прайс-лист" as client
+database "Система данных магазина\nPostgreSQL" as db
+rectangle "Формирование прайс-листов\nKubernetes CronJob, ежедневно в 06:00" as job
+folder "Хранилище файлов\nCSV/XLS прайс-листы" as files
+db --> job : Данные для выгрузки
+job --> files : Публикует файлы
+files --> client : Предоставляет файл
+@enduml

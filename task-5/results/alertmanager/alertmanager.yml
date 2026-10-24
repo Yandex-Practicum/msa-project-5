@@ -1,0 +1,13 @@
+global:
+  smtp_smarthost: mailhog:1025
+  smtp_from: batch@example.local
+route:
+  receiver: local-mail
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 1h
+receivers:
+  - name: local-mail
+    email_configs:
+      - to: ops@example.local
+        require_tls: false

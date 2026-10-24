@@ -1,0 +1,28 @@
+@startuml
+top to bottom direction
+skinparam defaultFontName DejaVu Sans
+skinparam rectangleBackgroundColor #E8F2FC
+skinparam rectangleBorderColor #2465A3
+title C4: ETL, мониторинг и логи TradeWare
+actor "Сотрудник склада\nERP" as user
+rectangle "Пакетная обработка\nSpring Batch" as batch
+database "Товары и данные лояльности\nPostgreSQL" as db
+rectangle "Сбор метрик\nPrometheus Agent" as agent
+rectangle "Метрики и правила\nPrometheus" as prometheus
+rectangle "Дашборд\nGrafana" as grafana
+rectangle "Оповещения\nAlertmanager" as alerts
+rectangle "Сбор логов\nFilebeat" as filebeat
+rectangle "Обработка логов\nLogstash" as logstash
+database "Хранилище логов\nElasticsearch" as elastic
+rectangle "Поиск логов\nKibana" as kibana
+user --> batch : Передаёт отчёт
+batch --> db : Обогащает и записывает
+agent --> batch : Опрашивает метрики
+agent --> prometheus : Передаёт метрики
+grafana --> prometheus : Запрашивает метрики
+prometheus --> alerts : Передаёт срабатывания
+batch --> filebeat : JSON-логи
+filebeat --> logstash : Передаёт записи
+logstash --> elastic : Индексирует
+kibana --> elastic : Ищет логи
+@enduml

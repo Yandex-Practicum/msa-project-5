@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+skinparam defaultFontName DejaVu Sans
+skinparam rectangleBackgroundColor #E8F2FC
+skinparam rectangleBorderColor #2465A3
+title C4: обработка складского отчёта TradeWare
+actor "Сотрудник склада\nЗагружает CSV" as user
+rectangle "ERP-интерфейс\nAngular" as ui
+rectangle "Основное приложение\nJava / WildFly" as monolith
+folder "Хранилище отчётов\nGoogle Cloud Storage" as storage
+rectangle "Пакетная обработка\nSpring Batch" as batch
+database "Справочные данные\nPostgreSQL" as refs
+database "Номенклатура и задания\nPostgreSQL" as products
+user --> ui : Загружает отчёт
+ui --> monolith : Передаёт CSV
+monolith --> storage : Сохраняет файл
+monolith --> batch : Передаёт ссылку
+storage --> batch : Предоставляет CSV
+refs --> batch : Данные для обогащения
+batch --> products : Записывает чанками
+batch --> monolith : Статус и ошибки
+@enduml

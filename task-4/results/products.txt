@@ -1,0 +1,9 @@
+ product_id | product_sku | product_name | product_data 
+------------+-------------+--------------+--------------
+          1 |       20001 | hammer       | Loyality_on
+          2 |       30001 | sink         | Loyality_on
+          3 |       40001 | roof_shell   | Loyality_on
+          4 |       50001 | priming      | Loyality_on
+          5 |       60001 | clapboard    | Loyality_on
+(5 rows)
+
