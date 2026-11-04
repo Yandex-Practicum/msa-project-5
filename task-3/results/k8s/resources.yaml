@@ -1,0 +1,170 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: shipment-demo
+type: Opaque
+stringData:
+  admin-password: demo-admin-password
+  export-password: demo-export-password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: shipment-demo
+data:
+  init.sql: |
+    CREATE TABLE shipments (
+      id integer PRIMARY KEY,
+      client_name text NOT NULL,
+      destination text NOT NULL,
+      shipped_at date NOT NULL
+    );
+    INSERT INTO shipments VALUES
+      (1, 'Альфа', 'Москва', '2026-11-01'),
+      (2, 'Бета', 'Казань', '2026-11-02'),
+      (3, 'Гамма', 'Пермь', '2026-11-03');
+    CREATE USER exporter WITH PASSWORD 'demo-export-password';
+    GRANT CONNECT ON DATABASE logistics TO exporter;
+    GRANT USAGE ON SCHEMA public TO exporter;
+    GRANT SELECT ON shipments TO exporter;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: shipment-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_DB
+              value: logistics
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: admin-password
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "logistics"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: init
+          configMap:
+            name: postgres-init
+        - name: postgres-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: shipment-demo
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shipment-reports
+  namespace: shipment-demo
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shipment-export
+  namespace: shipment-demo
+spec:
+  schedule: "0 20 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: export
+              image: shipment-export:1.0
+              imagePullPolicy: Never
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGDATABASE
+                  value: logistics
+                - name: PGUSER
+                  value: exporter
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: export-password
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              volumeMounts:
+                - name: reports
+                  mountPath: /reports
+          volumes:
+            - name: reports
+              persistentVolumeClaim:
+                claimName: shipment-reports
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: report-viewer
+  namespace: shipment-demo
+spec:
+  containers:
+    - name: viewer
+      image: busybox:1.36
+      command: ["sh", "-c", "sleep 2147483647"]
+      volumeMounts:
+        - name: reports
+          mountPath: /reports
+          readOnly: true
+  volumes:
+    - name: reports
+      persistentVolumeClaim:
+        claimName: shipment-reports
