@@ -1,0 +1,21 @@
+@startuml
+title Контекст системы формирования прайс-листов (To Be)
+left to right direction
+skinparam shadowing false
+skinparam wrapWidth 220
+skinparam defaultTextAlignment center
+
+actor "B2B-клиент" as client
+actor "Команда эксплуатации" as ops
+
+rectangle "**Онлайн-магазин**\n[Внешняя система]\nПредоставляет клиентам доступ к файлам" as store #999999
+rectangle "**Система формирования прайс-листов**\n[Система]\nЕжедневно формирует CSV для клиентов" as prices #1168BD
+database "**PostgreSQL магазина**\n[Внешняя система]\nТовары, категории, клиенты и цены" as db #999999
+cloud "**Объектное хранилище**\n[Внешняя система]\nХранит готовые CSV" as storage #999999
+
+client --> store : Получает свой прайс-лист
+prices --> db : Читает данные [SQL]
+prices --> storage : Сохраняет CSV
+store --> storage : Получает файлы для клиентов
+ops --> prices : Отслеживает состояние и ошибки
+@enduml

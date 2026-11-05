@@ -1,0 +1,36 @@
+@startuml
+title TradeWare — мониторинг и логирование (C4, контейнеры)
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+actor "Оператор" as operator
+actor "Сотрудник" as user
+package "TradeWare / локальное окружение" {
+  rectangle "Обработка товаров\n[Java, Spring Batch + Actuator]" as app #85BBF0
+  database "Товары и метаданные заданий\n[PostgreSQL]" as db #85BBF0
+  rectangle "Prometheus Agent\n[Сбор и remote write]" as agent #85BBF0
+  database "Prometheus\n[Хранение метрик, правила]" as prom #85BBF0
+  rectangle "Alertmanager\n[Маршрутизация оповещений]" as alert #85BBF0
+  rectangle "Локальный приёмник\n[HTTP webhook, демонстрация]" as receiver #85BBF0
+  rectangle "Grafana\n[Дашборд]" as grafana #85BBF0
+  rectangle "Файл JSON-логов\n[Общий том]" as file #85BBF0
+  rectangle "Filebeat\n[Доставка логов]" as fb #85BBF0
+  rectangle "Logstash\n[Приём логов]" as ls #85BBF0
+  database "Elasticsearch\n[Индекс логов]" as es #85BBF0
+  rectangle "Kibana\n[Просмотр логов]" as kibana #85BBF0
+}
+user --> app : Запускает задание [HTTP]
+app --> db : Читает справочник и\nпишет товары и статусы [SQL]
+agent --> app : Читает метрики [HTTP]
+agent --> prom : Передаёт метрики [remote write]
+prom --> alert : Передаёт события правил
+alert --> receiver : Отправляет уведомления [webhook]
+grafana --> prom : Запрашивает метрики
+operator --> grafana : Смотрит метрики
+operator --> kibana : Ищет логи
+app --> file : Записывает события [JSON]
+fb --> file : Читает
+fb --> ls : Передаёт [Beats]
+ls --> es : Индексирует
+kibana --> es : Запрашивает
+@enduml

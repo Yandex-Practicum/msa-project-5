@@ -1,0 +1,77 @@
+name: tradeware-task6
+services:
+  postgresdb:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '123456'
+      POSTGRES_DB: productsdb
+    ports: ['127.0.0.1:5434:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/main/resources/schema-all.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/init-loyality.sql:/docker-entrypoint-initdb.d/02-loyality.sql:ro
+      - ./backend/src/main/resources/loyality_data.csv:/seed/loyality_data.csv:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d productsdb']
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  app:
+    build: ./backend
+    image: tradeware-task6-app:local
+    depends_on:
+      postgresdb: {condition: service_healthy}
+    environment:
+      DB_URL: jdbc:postgresql://postgresdb:5432/productsdb
+      DB_USER: postgres
+      DB_PASSWORD: '123456'
+      APP_INPUT: ${APP_INPUT:-classpath:product-data.csv}
+    ports: ['127.0.0.1:8081:8080']
+    volumes: ['app-logs:/logs']
+  frontend:
+    build: ./frontend
+    image: tradeware-task6-frontend:local
+    depends_on: [app]
+    ports: ['127.0.0.1:8082:80']
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports: ['127.0.0.1:9201:9200']
+    volumes: ['elastic-data:/usr/share/elasticsearch/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fs http://localhost:9200/_cluster/health > /dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.28
+    environment:
+      LS_JAVA_OPTS: '-Xms256m -Xmx256m'
+    volumes: ['./logstash/pipeline:/usr/share/logstash/pipeline:ro']
+    depends_on:
+      elasticsearch: {condition: service_healthy}
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.28
+    user: root
+    command: ['-e', '--strict.perms=false']
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - app-logs:/logs:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on: [logstash]
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.28
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports: ['127.0.0.1:5602:5601']
+    depends_on:
+      elasticsearch: {condition: service_healthy}
+volumes:
+  pgdata: {name: tradeware-task6-postgres}
+  app-logs: {name: tradeware-task6-app-logs}
+  elastic-data: {name: tradeware-task6-elasticsearch}
+  filebeat-data: {name: tradeware-task6-filebeat}

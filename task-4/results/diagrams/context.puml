@@ -1,0 +1,16 @@
+@startuml
+title TradeWare — контекст системы (C4, уровень 1)
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam rectangle {
+  RoundCorner 15
+}
+actor "Сотрудник склада" as employee
+actor "Оператор поддержки" as operator
+rectangle "TradeWare\n[Программная система]\n\nПринимает и обрабатывает\nотчёты о товарах" as tradeware #1168BD
+rectangle "Партнёры и склады\n[Внешняя система]\n\nПолучают сведения об остатках" as partners #999999
+employee --> tradeware : Загружает CSV,\nсмотрит статус
+operator --> tradeware : Отслеживает задания\nи ошибки
+partners --> tradeware : Получают данные\nчерез API
+@enduml

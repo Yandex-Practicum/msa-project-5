@@ -1,0 +1,25 @@
+@startuml
+title TradeWare — запуск ETL и трассировка в логах
+left to right direction
+skinparam defaultFontName DejaVu Sans
+skinparam shadowing false
+actor "Сотрудник" as user
+rectangle "Клиент\n[React, TypeScript]\nПоказывает результат и traceId" as client #85BBF0
+rectangle "API и ETL\n[Spring Boot, Spring Batch, Brave]\nСинхронная обработка и JSON-логи" as api #85BBF0
+database "Данные товаров\n[PostgreSQL]" as db #85BBF0
+rectangle "Файл логов\n[общий том]" as logs #85BBF0
+rectangle "Filebeat" as beat #85BBF0
+rectangle "Logstash" as logstash #85BBF0
+database "Elasticsearch" as es #85BBF0
+rectangle "Kibana" as kibana #85BBF0
+actor "Оператор" as op
+user --> client : Запускает обработку
+client --> api : POST /jobs/import\nответ: статус и traceId
+api --> db : Читает справочник,\nпишет товары и статусы
+api --> logs : Пишет traceId, spanId, URI
+beat --> logs : Читает события
+beat --> logstash : Отправляет события
+logstash --> es : Индексирует
+kibana --> es : Читает
+op --> kibana : Ищет логи по traceId
+@enduml

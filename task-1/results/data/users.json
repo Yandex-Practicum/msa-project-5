@@ -1,0 +1,4 @@
+[
+  {"user_id": 1, "user_name": "Анна", "segment": "regular"},
+  {"user_id": 2, "user_name": "Иван", "segment": "new"}
+]

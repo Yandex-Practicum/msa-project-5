@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.batchprocessing.ProductItemProcessorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-05T09:32:21.940Z" hostname="fea158638d5e" time="0.012">
+  <properties/>
+  <testcase name="rejectsNegativeAmount()" classname="com.example.batchprocessing.ProductItemProcessorTest" time="0.008"/>
+  <testcase name="acceptsValidProduct()" classname="com.example.batchprocessing.ProductItemProcessorTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
