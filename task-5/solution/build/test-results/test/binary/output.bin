@@ -1,0 +1,1 @@
+�08:33:01.990 [Test worker] INFO com.example.batchprocessing.JobCompletionNotificationListener -- Задание importProductJob завершено: COMPLETED, executionId=1, exitDescription=

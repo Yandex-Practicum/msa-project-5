@@ -1,0 +1,6 @@
+.gradle
+build
+.env
+README.md
+ADR.md
+C4.md

@@ -1,0 +1,17 @@
+groups:
+  - name: tradeware-batch
+    rules:
+      - alert: BatchApplicationDown
+        expr: up{job="batch-processing"} == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations:
+          summary: 'Приложение пакетной обработки недоступно'
+          description: 'Prometheus Agent не может получить метрики более 30 секунд.'
+      - alert: BatchJobFailed
+        expr: increase(tradeware_batch_jobs_total{status="failed"}[5m]) > 0
+        for: 0s
+        labels: {severity: warning}
+        annotations:
+          summary: 'Ошибка задания Spring Batch'
+          description: 'За последние 5 минут как минимум одно задание завершилось ошибкой.'

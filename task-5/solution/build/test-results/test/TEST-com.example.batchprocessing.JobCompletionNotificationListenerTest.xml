@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.batchprocessing.JobCompletionNotificationListenerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-05T08:33:01.942Z" hostname="b7c04e5d56d8" time="0.059">
+  <properties/>
+  <testcase name="recordsCompletedJobAndItems()" classname="com.example.batchprocessing.JobCompletionNotificationListenerTest" time="0.059"/>
+  <system-out><![CDATA[08:33:01.990 [Test worker] INFO com.example.batchprocessing.JobCompletionNotificationListener -- Задание importProductJob завершено: COMPLETED, executionId=1, exitDescription=
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
